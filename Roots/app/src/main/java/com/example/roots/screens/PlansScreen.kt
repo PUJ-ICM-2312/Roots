@@ -1,4 +1,4 @@
-package com.screens
+package com.example.roots.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -158,12 +158,3 @@ fun BottomNavBar() {
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Parte_1Theme {
-        ////////PlansScreen()
-        ConfirmSubscriptionScreen()
-    }
-}

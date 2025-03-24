@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.screens.*
+
 import com.example.roots.ui.theme.RootsTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,13 +20,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RootsTheme {
+            RootsTheme {/*
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
-                }
+                }*/
+                // Para probar la pantalla que hagan, deben primero crearla en la carpeta screens
+                // Luego poner el nombre acá abajo, así cuando se corra esta vaina, se abre esa pantalla
+                ConfirmSubscriptionScreen()
             }
         }
     }
@@ -43,6 +47,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     RootsTheme {
-        Greeting("Android")
+        PlansScreen()
     }
 }
