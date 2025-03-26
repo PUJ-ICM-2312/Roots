@@ -20,14 +20,18 @@ fun NavigationStack() {
         Screen.Payment,
         Screen.PaymentSuccess,
         Screen.Plans,
-        Screen.PropertyScrollMode
+        Screen.PropertyScrollMode,
+        Screen.Settings,
+        Screen.Filter,
+        Screen.EditProfile,
+        Screen.CurrentPlan,
+        Screen.Login,
+        Screen.Welcome
     )
 
-    Box(
-
-    ){
+    Box {
         // Definimos la navegación principal
-        NavHost(navController = navController, startDestination = Screen.Swipe.route) {
+        NavHost(navController = navController, startDestination = Screen.Welcome.route) {
             screens.forEach { screen ->
                 composable(route = screen.route) {
                     when (screen) {
@@ -41,25 +45,36 @@ fun NavigationStack() {
                         is Screen.PaymentSuccess -> PaymentSuccessScreen()
                         is Screen.Plans -> PlansScreen()
                         is Screen.PropertyScrollMode -> PropertyScrollModeScreen()
+                        is Screen.Settings -> SettingsScreen()
+                        is Screen.Filter -> FilterScreen()
+                        is Screen.EditProfile -> EditProfileScreen()
+                        is Screen.CurrentPlan -> CurrentPlanScreen()
+                        is Screen.Login -> LoginScreen()
+                        is Screen.Welcome -> WelcomeScreen()
                     }
                 }
             }
         }
-
         // Llamada al componente SidebarNavigation
         SidebarNavigation(navController, screens)
     }
 }
 
 sealed class Screen(val route: String) {
-    object Swipe: Screen("swipe")
-    object AddProperty: Screen("add_property")
-    object Chat: Screen("chat")
-    object ConfirmSubscription: Screen("confirm_subscription")
-    object Messages: Screen("messages")
-    object MyProperties: Screen("my_properties")
-    object Payment: Screen("payment")
-    object PaymentSuccess: Screen("payment_success")
-    object Plans: Screen("plans")
-    object PropertyScrollMode: Screen("property_scroll_mode")
+    object Swipe : Screen("swipe")
+    object AddProperty : Screen("add_property")
+    object Chat : Screen("chat")
+    object ConfirmSubscription : Screen("confirm_subscription")
+    object Messages : Screen("messages")
+    object MyProperties : Screen("my_properties")
+    object Payment : Screen("payment")
+    object PaymentSuccess : Screen("payment_success")
+    object Plans : Screen("plans")
+    object PropertyScrollMode : Screen("property_scroll_mode")
+    object Settings : Screen("settings")
+    object Filter : Screen("filter")
+    object EditProfile : Screen("edit_profile")
+    object CurrentPlan : Screen("current_plan")
+    object Login : Screen("login")
+    object Welcome : Screen("welcome")
 }

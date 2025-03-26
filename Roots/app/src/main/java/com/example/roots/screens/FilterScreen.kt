@@ -5,13 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,14 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Scaffold
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FiltersScreen() {
+fun FilterScreen() {
     var address by remember { mutableStateOf("") }
     var bathrooms by remember { mutableStateOf("") }
     var rooms by remember { mutableStateOf("") }
@@ -117,5 +112,5 @@ fun FilterSection(title: String, options: List<String>, selectedOptions: Mutable
 @Preview(showBackground = true)
 @Composable
 fun PreviewFiltersScreen() {
-    FiltersScreen()
+    FilterScreen()
 }

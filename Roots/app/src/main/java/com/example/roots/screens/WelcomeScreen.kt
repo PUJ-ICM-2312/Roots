@@ -19,7 +19,7 @@ import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 
 @Composable
-fun Welcome() {
+fun WelcomeScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,6 +70,6 @@ fun Welcome() {
 @Composable
 fun PreviewWelcomeScreen() {
     RootsTheme {
-        Welcome()
+        WelcomeScreen()
     }
 }
