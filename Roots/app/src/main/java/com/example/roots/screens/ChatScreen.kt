@@ -3,10 +3,10 @@ package com.example.roots.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -18,22 +18,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
+import com.example.roots.ui.theme.RootsTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     username: String = "Andres Perez",
-    userImage: Int = R.drawable.usuario1, // temporal, puede ser perfil
+    userImage: Int = R.drawable.usuario1,
     onBack: () -> Unit = {}
 ) {
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
 
+    val messages = listOf(
+        Message("Hola, me interesa tu apartamento en Santa Viviana.", false),
+        Message("¡Hola! Claro, ¿te gustaría visitarlo?", true),
+        Message("Sí, ¿podría este sábado en la tarde?", false),
+        Message("Perfecto, agendado a las 3:00 p.m.", true)
+    )
+
     Scaffold(
         topBar = {
-            @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
+                modifier = Modifier.padding(top = 30.dp),
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
@@ -59,7 +69,7 @@ fun ChatScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -68,11 +78,11 @@ fun ChatScreen(
                     placeholder = { Text("Escribe un mensaje...") },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 8.dp) // ← aquí estaba el error
+                        .padding(end = 8.dp)
                 )
                 Button(
                     onClick = {
-                        // Aquí podrías enviar el mensaje (agregarlo a una lista, etc.)
+                        // Aquí podrías agregar el mensaje a una lista mutable
                         messageText = TextFieldValue("")
                     },
                     shape = RoundedCornerShape(50),
@@ -82,20 +92,25 @@ fun ChatScreen(
                 }
             }
         }
-
-    ) {
+    ) { innerPadding ->
         Column(
             modifier = Modifier
-                .padding(it)
-                .padding(12.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
                 .fillMaxSize()
+                .navigationBarsPadding()
+                .padding(horizontal = 12.dp)
         ) {
-            // Simulación de mensajes anteriores
-            ChatBubble("Hola, me interesa tu apartamento en Santa Viviana.", isMine = false)
-            ChatBubble("¡Hola! Claro, ¿te gustaría visitarlo?", isMine = true)
-            ChatBubble("Sí, ¿podría este sábado en la tarde?", isMine = false)
-            ChatBubble("Perfecto, agendado a las 3:00 p.m.", isMine = true)
+            // ✅ LazyColumn dentro de Column con weight para que TopBar y BottomBar queden fijos
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp)
+            ) {
+                items(messages) { msg ->
+                    ChatBubble(text = msg.text, isMine = msg.isMine)
+                }
+            }
         }
     }
 }
@@ -119,5 +134,15 @@ fun ChatBubble(text: String, isMine: Boolean) {
         ) {
             Text(text = text, color = Color.Black)
         }
+    }
+}
+
+data class Message(val text: String, val isMine: Boolean)
+
+@Preview(showBackground = true)
+@Composable
+fun ChatScreenPreview() {
+    RootsTheme {
+        ChatScreen()
     }
 }
