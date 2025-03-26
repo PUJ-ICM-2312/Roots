@@ -11,7 +11,7 @@ ROOTS - La 501 - Equipo 2
 ![Daniel Fernando Gonzales](Imageneswiki/Danielimg.jpg)
 
 ### 3. Juan Diego Reyes
-![Juan Diego Reyes](Imageneswiki/JuanDiegoImg.jpg)
+![Juan Diego Reyes](Imageneswiki/JuanDiegoImg.png)
 
 ### 4. David Ramirez
 ![David Ramirez]()
@@ -32,15 +32,8 @@ ROOTS - La 501 - Equipo 2
 
 Descarga Roots y encuentra tu hogar ideal con un solo scroll. 🌎📲
 
-## Diseño
 
-### Casos de uso
+## Capturas
 
-![](/Imageneswiki/casos_de_uso.png)
-
-### Diagrama de clases
-
-![](/Imageneswiki/clases.png)
-
-### Capturas
-
+![](/Imageneswiki/captura1.png)
+![](/Imageneswiki/captura2.png)
