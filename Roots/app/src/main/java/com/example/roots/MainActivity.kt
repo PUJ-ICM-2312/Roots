@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                 }*/
                 // Para probar la pantalla que hagan, deben primero crearla en la carpeta screens
                 // Luego poner el nombre acá abajo, así cuando se corra esta vaina, se abre esa pantalla
-                AddPropertyScreen()
+                ChatScreen()
             }
         }
     }
@@ -43,10 +43,3 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    RootsTheme {
-        AddPropertyScreen()
-    }
-}
