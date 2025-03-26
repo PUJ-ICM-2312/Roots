@@ -23,7 +23,9 @@ fun NavigationStack() {
         Screen.PropertyScrollMode
     )
 
-    Box {
+    Box(
+
+    ){
         // Definimos la navegación principal
         NavHost(navController = navController, startDestination = Screen.Swipe.route) {
             screens.forEach { screen ->

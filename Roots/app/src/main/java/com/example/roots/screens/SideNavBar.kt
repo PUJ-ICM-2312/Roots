@@ -15,14 +15,16 @@ import androidx.navigation.NavController
 @Composable
 fun SidebarNavigation(navController: NavController, screens: List<Screen>) {
     var isOpen by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // Botón para abrir la barra lateral
+        // Botón flotante con fondo transparente
         FloatingActionButton(
             onClick = { isOpen = !isOpen },
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(16.dp),
-            containerColor = MaterialTheme.colorScheme.primary
+            containerColor = Color.Black.copy(alpha = 0.3f), // Fondo negro con transparencia
+            contentColor = Color.White
         ) {
             Text("☰", color = Color.White)
         }
