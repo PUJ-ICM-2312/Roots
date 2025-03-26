@@ -139,10 +139,4 @@ fun ChatBubble(text: String, isMine: Boolean) {
 
 data class Message(val text: String, val isMine: Boolean)
 
-@Preview(showBackground = true)
-@Composable
-fun ChatScreenPreview() {
-    RootsTheme {
-        ChatScreen()
-    }
-}
+
