@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.roots.R
 
 @Composable
 fun EditProfileScreen() {
@@ -36,7 +37,14 @@ fun EditProfileScreen() {
             // Logo arriba
             Spacer(modifier = Modifier.height(8.dp))
             // Reemplaza painterResource si tienes un logo
-            Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(48.dp), tint = Color(0xFF4CAF50))
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .height(60.dp)
+                    .padding(top = 8.dp)
+            )
+
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Perfil",
