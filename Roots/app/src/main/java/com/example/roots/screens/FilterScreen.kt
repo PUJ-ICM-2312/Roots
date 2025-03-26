@@ -38,6 +38,7 @@ fun FilterScreen() {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(30.dp))
         Text(
             text = "Filtros",
             fontSize = 24.sp,
