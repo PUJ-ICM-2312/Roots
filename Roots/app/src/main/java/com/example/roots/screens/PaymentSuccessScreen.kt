@@ -31,7 +31,7 @@ fun PaymentSuccessScreen(onPublishClick: () -> Unit = {}) {
         ) {
             // Logo más arriba
             Image(
-                painter = painterResource(id = R.drawable.logo), // Cambia por tu logo real
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo Roots",
                 modifier = Modifier
                     .size(170.dp)

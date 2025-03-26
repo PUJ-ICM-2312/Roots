@@ -32,10 +32,12 @@ fun MessagesScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = "Mis Inmuebles",
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
