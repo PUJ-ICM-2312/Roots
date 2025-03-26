@@ -26,11 +26,12 @@ fun NavigationStack() {
         Screen.EditProfile,
         Screen.CurrentPlan,
         Screen.Login,
-        Screen.Welcome
+        Screen.Welcome,
+        Screen.SignUp,
+        Screen.FakeMap
     )
 
     Box {
-        // Definimos la navegación principal
         NavHost(navController = navController, startDestination = Screen.Welcome.route) {
             screens.forEach { screen ->
                 composable(route = screen.route) {
@@ -51,11 +52,14 @@ fun NavigationStack() {
                         is Screen.CurrentPlan -> CurrentPlanScreen()
                         is Screen.Login -> LoginScreen()
                         is Screen.Welcome -> WelcomeScreen()
+                        is Screen.SignUp -> SignUpScreen()
+                        is Screen.FakeMap -> MapScreenPreview()
+                        is Screen.MapPreview -> MapScreenPreview()
                     }
                 }
             }
         }
-        // Llamada al componente SidebarNavigation
+
         SidebarNavigation(navController, screens)
     }
 }
@@ -77,4 +81,7 @@ sealed class Screen(val route: String) {
     object CurrentPlan : Screen("current_plan")
     object Login : Screen("login")
     object Welcome : Screen("welcome")
+    object SignUp : Screen("signup")
+    object FakeMap : Screen("fake_map")
+    object MapPreview : Screen("map_preview")
 }
