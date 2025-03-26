@@ -1,5 +1,6 @@
 package com.example.roots.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Scaffold
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,29 +83,35 @@ fun FiltersScreen() {
     }
 }
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun FilterSection(title: String, options: List<String>, selectedOptions: MutableMap<String, Boolean>) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .background(Color(0xFFA8FF98), shape = RoundedCornerShape(8.dp))
-            .border(1.dp, Color.Black, shape = RoundedCornerShape(8.dp))
-            .padding(8.dp)
-    ) {
-        options.forEach { option ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = option, modifier = Modifier.weight(1f))
-                Checkbox(
-                    checked = selectedOptions[option] == true,
-                    onCheckedChange = { selectedOptions[option] = it }
-                )
+    Scaffold(
+        bottomBar = { BottomNavBar() },
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .background(Color(0xFFA8FF98), shape = RoundedCornerShape(8.dp))
+                .border(1.dp, Color.Black, shape = RoundedCornerShape(8.dp))
+                .padding(8.dp)
+        ) {
+            options.forEach { option ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = option, modifier = Modifier.weight(1f))
+                    Checkbox(
+                        checked = selectedOptions[option] == true,
+                        onCheckedChange = { selectedOptions[option] = it }
+                    )
+                }
             }
         }
     }
+
 }
 
 @Preview(showBackground = true)
