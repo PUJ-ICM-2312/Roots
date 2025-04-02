@@ -63,6 +63,9 @@ dependencies {
     implementation("androidx.compose.animation:animation:1.5.1")
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.foundation:foundation:1.6.1")
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.maps.android:maps-compose:2.11.4")
+
 
 
 }
