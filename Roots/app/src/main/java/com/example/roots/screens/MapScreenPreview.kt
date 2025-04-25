@@ -21,9 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
+import androidx.navigation.NavController
 
 @Composable
-fun MapScreenPreview() {
+fun MapScreenPreview(navController: NavController) {
     val location = "PUJ"
     val selectedType = "Apartamento"
     val points = listOf(
@@ -37,7 +38,7 @@ fun MapScreenPreview() {
     var selectedDescription by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) { paddingValues ->
         Box(
             modifier = Modifier

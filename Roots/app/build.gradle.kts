@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.play.services.maps)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -65,6 +66,13 @@ dependencies {
     implementation("androidx.compose.foundation:foundation:1.6.1")
     implementation ("com.google.android.gms:play-services-maps:18.2.0")
     implementation ("com.google.maps.android:maps-compose:2.11.4")
+    implementation ("androidx.navigation:navigation-compose:2.7.5")
+    implementation ("androidx.activity:activity-compose:1.7.2")
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+
+
 
 
 

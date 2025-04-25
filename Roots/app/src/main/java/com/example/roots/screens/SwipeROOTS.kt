@@ -26,11 +26,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.with
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.navigation.NavController
 
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SwipeROOTS() {
+fun SwipeROOTS(navController: NavController) {
     val properties = listOf(
         Triple(R.drawable.inmueble1, "Santa Viviana", "60 m² • 3 km"),
         Triple(R.drawable.inmueble2, "Polo Club", "75 m² • 4.5 km"),
@@ -42,7 +43,7 @@ fun SwipeROOTS() {
     var currentIndex by remember { mutableStateOf(0) }
 
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) { padding ->
         Column(
             modifier = Modifier

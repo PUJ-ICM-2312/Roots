@@ -19,11 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
+import androidx.navigation.NavController
 
 @Composable
-fun MessagesScreen() {
+fun MessagesScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier

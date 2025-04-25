@@ -30,11 +30,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+
 
 @Composable
-fun PlansScreen() {
+fun PlansScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier
@@ -124,7 +127,9 @@ fun SubscriptionCard(title: String, features: List<String>) {
 }
 
 @Composable
-fun BottomNavBar() {
+fun BottomNavBar(navController: NavController) {
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+
     Column {
         Divider(color = Color.LightGray, thickness = 1.dp)
 
@@ -138,23 +143,50 @@ fun BottomNavBar() {
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.Favorite, contentDescription = "Favoritos")
+                IconButton(
+                    onClick = { navController.navigate("favorites") },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = "Favoritos",
+                        tint = if (currentRoute == "favorites") Color(0xFF2E7D32) else Color.Black
+                    )
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.VpnKey, contentDescription = "Tus inmuebles")
+
+                IconButton(onClick = { navController.navigate("my_properties") }) {
+                    Icon(
+                        imageVector = Icons.Default.VpnKey,
+                        contentDescription = "Tus inmuebles",
+                        tint = if (currentRoute == "my_properties") Color(0xFF2E7D32) else Color.Black
+                    )
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar inmuebles")
+
+                IconButton(onClick = { navController.navigate("search") }) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Buscar inmuebles",
+                        tint = if (currentRoute == "search") Color(0xFF2E7D32) else Color.Black
+                    )
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.Message, contentDescription = "Mensajes")
+
+                IconButton(onClick = { navController.navigate("messages") }) {
+                    Icon(
+                        imageVector = Icons.Default.Message,
+                        contentDescription = "Mensajes",
+                        tint = if (currentRoute == "messages") Color(0xFF2E7D32) else Color.Black
+                    )
                 }
-                IconButton(onClick = { }) {
-                    Icon(Icons.Default.Settings, contentDescription = "Configuración")
+
+                IconButton(onClick = { navController.navigate("settings") }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Configuración",
+                        tint = if (currentRoute == "settings") Color(0xFF2E7D32) else Color.Black
+                    )
                 }
             }
         }
     }
 }
+
 

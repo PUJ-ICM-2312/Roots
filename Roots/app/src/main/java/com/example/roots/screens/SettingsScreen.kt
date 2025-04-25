@@ -17,11 +17,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
+import androidx.navigation.NavController
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier
@@ -31,7 +32,7 @@ fun SettingsScreen() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
-            // Logo arriba izquierda
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -47,33 +48,18 @@ fun SettingsScreen() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Foto de perfil con botón de edición
             Box(
                 modifier = Modifier
                     .size(110.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Imagen de perfil (círculo gris)
                 Box(
                     modifier = Modifier
                         .size(110.dp)
                         .clip(CircleShape)
                         .background(Color.LightGray)
                 )
-
-                // Botón de edición flotante
-                IconButton(
-                    onClick = { /* acción editar */ },
-                    modifier = Modifier
-                        .size(32.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = 6.dp, y = (-6).dp)
-                        .background(Color.White, shape = CircleShape)
-                ) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.Black)
-                }
             }
-
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -81,10 +67,18 @@ fun SettingsScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            SettingsButton(Icons.Default.Settings, "Perfil") { /* Navegar a perfil */ }
-            SettingsButton(Icons.Default.Description, "Términos y condiciones") { /* Navegar */ }
-            SettingsButton(Icons.Default.GridOn, "Revisa tu plan") { /* Navegar */ }
-            SettingsButton(Icons.Default.Star, "Obtén Roots Premium") { /* Navegar */ }
+            SettingsButton(Icons.Default.Settings, "Perfil") {
+                navController.navigate("edit_profile")
+            }
+            SettingsButton(Icons.Default.Description, "Términos y condiciones") {
+                // TODO: Navegar a terminos
+            }
+            SettingsButton(Icons.Default.GridOn, "Revisa tu plan") {
+                navController.navigate("current_plan")
+            }
+            SettingsButton(Icons.Default.Star, "Obtén Roots Premium") {
+                navController.navigate("plans")
+            }
         }
     }
 }

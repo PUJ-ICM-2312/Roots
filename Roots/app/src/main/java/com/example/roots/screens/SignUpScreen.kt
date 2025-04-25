@@ -16,13 +16,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
+import com.example.roots.ui.theme.RootsTheme
 
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -49,15 +52,21 @@ fun SignUpScreen() {
             modifier = Modifier.fillMaxWidth()
         ) {
             SignUpField("Usuario", username, { username = it }, Icons.Default.Person)
-            SignUpField("Correo Electronico", email, { email = it }, Icons.Default.Email)
+            SignUpField("Correo Electrónico", email, { email = it }, Icons.Default.Email)
             SignUpField("Contraseña", password, { password = it }, Icons.Default.Lock, true)
             SignUpField("Confirmar Contraseña", confirmPassword, { confirmPassword = it }, Icons.Default.Lock, true)
 
             Button(
-                onClick = { /* TODO */ },
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9AF5B4)),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
             ) {
                 Text("Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
@@ -65,7 +74,9 @@ fun SignUpScreen() {
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
         ) {
             Text("O regístrate con")
 
@@ -87,6 +98,13 @@ fun SignUpScreen() {
                         modifier = Modifier.size(32.dp)
                     )
                 }
+            }
+
+            TextButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("¿Ya tienes cuenta? Inicia sesión")
             }
         }
     }
@@ -112,8 +130,10 @@ fun SignUpField(
     )
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {
-    SignUpScreen()
+    RootsTheme {
+        SignUpScreen(navController = rememberNavController())
+    }
 }

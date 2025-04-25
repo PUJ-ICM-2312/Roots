@@ -18,18 +18,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
-import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
+    navController: NavController,
     username: String = "Andres Perez",
-    userImage: Int = R.drawable.usuario1,
-    onBack: () -> Unit = {}
+    userImage: Int = R.drawable.usuario1
 ) {
     var messageText by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -59,7 +58,7 @@ fun ChatScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onBack() }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
                 }
@@ -82,7 +81,6 @@ fun ChatScreen(
                 )
                 Button(
                     onClick = {
-                        // Aquí podrías agregar el mensaje a una lista mutable
                         messageText = TextFieldValue("")
                     },
                     shape = RoundedCornerShape(50),
@@ -100,7 +98,6 @@ fun ChatScreen(
                 .navigationBarsPadding()
                 .padding(horizontal = 12.dp)
         ) {
-            // ✅ LazyColumn dentro de Column con weight para que TopBar y BottomBar queden fijos
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
@@ -138,5 +135,3 @@ fun ChatBubble(text: String, isMine: Boolean) {
 }
 
 data class Message(val text: String, val isMine: Boolean)
-
-

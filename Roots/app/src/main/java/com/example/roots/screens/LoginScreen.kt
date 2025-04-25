@@ -21,9 +21,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -36,7 +38,7 @@ fun LoginScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo), // Asegúrate de tener el logo en res/drawable
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "App Logo",
             modifier = Modifier.size(100.dp)
         )
@@ -105,6 +107,6 @@ fun LoginScreen() {
 @Composable
 fun PreviewLoginScreen() {
     RootsTheme {
-        LoginScreen()
+        LoginScreen(navController = rememberNavController())
     }
 }

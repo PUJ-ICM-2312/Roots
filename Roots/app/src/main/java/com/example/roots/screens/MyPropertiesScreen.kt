@@ -21,11 +21,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
 
 @Composable
-fun MyPropertiesScreen() {
+fun MyPropertiesScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier

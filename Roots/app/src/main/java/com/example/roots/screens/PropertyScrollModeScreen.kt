@@ -30,12 +30,13 @@ import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
+import androidx.navigation.NavController
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PropertyScrollModeScreen() {
+fun PropertyScrollModeScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier

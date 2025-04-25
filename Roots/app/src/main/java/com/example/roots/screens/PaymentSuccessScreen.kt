@@ -3,7 +3,6 @@ package com.example.roots.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,36 +14,33 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roots.R
+import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.roots.R
 
 @Composable
-fun PaymentSuccessScreen(onPublishClick: () -> Unit = {}) {
+fun PaymentSuccessScreen(navController: NavController) {
     Scaffold { padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
                 .padding(horizontal = 24.dp)
-                .padding(top = 48.dp), // más espacio arriba
+                .padding(top = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo más arriba
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo Roots",
-                modifier = Modifier
-                    .size(170.dp)
+                modifier = Modifier.size(170.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // GIF de check más grande
             Image(
-                painter = rememberAsyncImagePainter(R.drawable.check_circle), // El gif
+                painter = rememberAsyncImagePainter(R.drawable.check_circle),
                 contentDescription = "Pago exitoso",
-                modifier = Modifier
-                    .size(180.dp) // antes era 120.dp
+                modifier = Modifier.size(180.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -71,7 +67,11 @@ fun PaymentSuccessScreen(onPublishClick: () -> Unit = {}) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { onPublishClick() },
+                onClick = {
+                    navController.navigate("add_property") {
+                        popUpTo("payment_success") { inclusive = true }
+                    }
+                },
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB6F2C1)),
                 modifier = Modifier
@@ -88,4 +88,3 @@ fun PaymentSuccessScreen(onPublishClick: () -> Unit = {}) {
         }
     }
 }
-

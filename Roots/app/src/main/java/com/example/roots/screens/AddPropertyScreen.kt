@@ -27,9 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roots.R
+import androidx.navigation.NavController
+
 
 @Composable
-fun AddPropertyScreen() {
+fun AddPropertyScreen(navController: NavController) {
     var direccion by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var estrato by remember { mutableStateOf("Seleccionar") }
@@ -54,7 +56,7 @@ fun AddPropertyScreen() {
     val tiposInmueble = listOf("Apartamento", "Casa", "Apartaestudio", "Oficina", "Lote", "Local")
 
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier
