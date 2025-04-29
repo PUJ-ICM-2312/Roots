@@ -15,11 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 
 @Composable
-fun WelcomeScreen() {
+fun WelcomeScreen(navController: NavController = rememberNavController()) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -28,7 +30,7 @@ fun WelcomeScreen() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo), // Reemplaza con tu logo
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo de Roots",
             modifier = Modifier.size(100.dp)
         )
@@ -45,7 +47,10 @@ fun WelcomeScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { /* Acción de iniciar sesión */ },
+            onClick = {
+                // Navegar a la pantalla de Login usando la ruta definida
+                navController.navigate("login")
+            },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f)
@@ -56,7 +61,10 @@ fun WelcomeScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* Acción de registrarse */ },
+            onClick = {
+                // Navegar a la pantalla de SignUp usando la ruta definida
+                navController.navigate("signup")
+            },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f)

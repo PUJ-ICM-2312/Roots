@@ -17,11 +17,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
+
 
 @Composable
-fun ConfirmSubscriptionScreen() {
+fun ConfirmSubscriptionScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier

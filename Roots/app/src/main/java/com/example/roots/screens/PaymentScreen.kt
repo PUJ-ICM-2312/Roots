@@ -17,10 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import androidx.compose.foundation.BorderStroke
+import androidx.navigation.NavController
 
 
 @Composable
-fun PaymentScreen() {
+fun PaymentScreen(navController: NavController) {
     var selectedCard by remember { mutableStateOf("") }
     var acceptedTerms by remember { mutableStateOf(false) }
     var receivePromos by remember { mutableStateOf(false) }
