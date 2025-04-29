@@ -18,10 +18,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roots.R
+import com.example.roots.ui.theme.RootsTheme
 
 @Composable
 fun AddPropertyScreen() {
@@ -110,5 +112,13 @@ fun AddPropertyScreen() {
                 Text("Guardar Inmueble", color = Color.Black)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+    RootsTheme {
+        AddPropertyScreen()
     }
 }
