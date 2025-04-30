@@ -1,5 +1,6 @@
 package com.example.roots.screens
 
+import android.location.Location
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,6 +42,14 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.Context
+import android.os.Looper
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.model.*
+import com.google.maps.android.compose.*
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -200,20 +209,60 @@ fun PropertyLocation(inmueble: Inmueble) {
 
 @Composable
 fun PropertyMap(inmueble: Inmueble) {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(250.dp)
-        .padding(16.dp)) {
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
+    }
 
-        Image(
-            painter = painterResource(id = R.drawable.fakemap),
-            contentDescription = "Mapa",
+    // Obtener ubicación del usuario una vez
+    LaunchedEffect(Unit) {
+        try {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+                location?.let {
+                    userLocation = LatLng(it.latitude, it.longitude)
+                }
+            }
+        } catch (e: SecurityException) {
+            // Manejo de permisos si es necesario
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .padding(16.dp)
+    ) {
+        GoogleMap(
             modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = userLocation != null),
+            uiSettings = MapUiSettings(zoomControlsEnabled = false)
+        ) {
+            Marker(
+                state = MarkerState(position = LatLng(inmueble.latitud, inmueble.longitud)),
+                title = "Inmueble",
+                snippet = inmueble.direccion
+            )
+            userLocation?.let {
+                Marker(
+                    state = MarkerState(position = it),
+                    title = "Tú"
+                )
+                Polyline(
+                    points = listOf(it, LatLng(inmueble.latitud, inmueble.longitud)),
+                    color = Color.Blue,
+                    width = 6f
+                )
+            }
+        }
 
         IconButton(
-            onClick = { /* TODO: Mostrar ruta */ },
+            onClick = {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(12.dp)
@@ -224,6 +273,7 @@ fun PropertyMap(inmueble: Inmueble) {
         }
     }
 }
+
 
 @Composable
 fun ContactButton(inmueble: Inmueble) {
