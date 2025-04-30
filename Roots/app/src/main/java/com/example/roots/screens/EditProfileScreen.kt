@@ -2,10 +2,12 @@ package com.example.roots.screens
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -32,13 +34,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
 import com.example.roots.data.UsuarioRepository
 import com.example.roots.model.Usuario
 import com.example.roots.ui.theme.RootsTheme
+import com.google.accompanist.permissions.rememberPermissionState
 import saveImageToInternalStorage
+import java.io.File
 import java.io.FileOutputStream
 
 /**
@@ -53,55 +60,88 @@ private fun saveBitmapToInternalStorage(context: android.content.Context, bmp: B
     return file.absolutePath
 }
 
-
+private fun saveImageToInternalStorage(context: Context, uri: Uri): String {
+    // generamos un nombre único
+    val filename = "profile_${System.currentTimeMillis()}.jpg"
+    // resolvemos el fichero destino
+    val file = File(context.filesDir, filename)
+    // abrimos el input de la URI y el output hacia el fichero
+    context.contentResolver.openInputStream(uri)?.use { input ->
+        FileOutputStream(file).use { output ->
+            input.copyTo(output)
+        }
+    }
+    return file.absolutePath
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileScreen(navController: androidx.navigation.NavController) {
+fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val repoUser = UsuarioRepository.usuario
 
-    // estados inicializados con los datos actuales
+    /*// estados inicializados con los datos actuales
     var profileImagePath by remember { mutableStateOf(repoUser.fotoPath) }
     var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
+    // 1) permiso
+    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
+*/
     var nombres   by remember { mutableStateOf(repoUser.nombres) }
     var apellidos by remember { mutableStateOf(repoUser.apellidos) }
     var correo    by remember { mutableStateOf(repoUser.correo) }
     var celular   by remember { mutableStateOf(repoUser.celular) }
     var cedula    by remember { mutableStateOf(repoUser.cedula) }
 
-    // 1) Selector de GALERÍA
+
+    // estado para la ruta de la foto en disco
+    var profileImagePath by remember { mutableStateOf(repoUser.fotoPath) }
+
+    // 1) launcher para tomar foto (recibe un Bitmap)
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicturePreview()
+    ) { bmp: Bitmap? ->
+        bmp?.let {
+            // guardo el bitmap en disco y actualizo el path
+            val path = saveBitmapToInternalStorage(context, it)
+            profileImagePath = path
+        }
+    }
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Se necesita permiso de cámara", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 2) launcher para escoger de galería
     val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // intentamos guardar en interno; aquí obtenemos String?
-            val maybePath = saveImageToInternalStorage(context, it)
-            // sólo si no es null, asignamos
-            maybePath?.let { path ->
+            // guardo el stream en un fichero local
+            val path = saveImageToInternalStorage(context, it)
+            if (path != null) {
                 profileImagePath = path
-                // luego tu lógica de ImageDecoder…
-                if (Build.VERSION.SDK_INT >= 28) {
-                    val src = ImageDecoder.createSource(context.contentResolver, it)
-                    profileBitmap = ImageDecoder.decodeBitmap(src)
-                }
             }
         }
     }
 
-
-    // 2) Selector de CÁMARA
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bmp: Bitmap? ->
-        bmp?.let {
-            // lo guardamos y actualizamos both path y bitmap
-            val path = saveBitmapToInternalStorage(context, it)
-            profileImagePath = path
-            profileBitmap = it
+    // 3) launcher para pedir permiso de cámara
+    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted: Boolean ->
+        if (granted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "Necesito permiso de cámara para tomar foto", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     Scaffold(bottomBar = { BottomNavBar(navController) }) { padding ->
         Column(
@@ -130,10 +170,10 @@ fun EditProfileScreen(navController: androidx.navigation.NavController) {
                     .background(Color.LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                profileBitmap?.let {
-                    Image(
-                        bitmap = it.asImageBitmap(),
-                        contentDescription = null,
+                if (profileImagePath.isNotBlank()) {
+                    AsyncImage(
+                        model = File(profileImagePath),
+                        contentDescription = "Foto de perfil",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -145,7 +185,19 @@ fun EditProfileScreen(navController: androidx.navigation.NavController) {
             // Botones
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
-                    onClick = { cameraLauncher.launch(null) },
+                    onClick = {
+                        // 1) ¿Ya tengo permiso?
+                        if (ContextCompat.checkSelfPermission(
+                                context, Manifest.permission.CAMERA
+                            ) == PackageManager.PERMISSION_GRANTED
+                        ) {
+                            // 2) Sí: abro la cámara
+                            cameraLauncher.launch(null)
+                        } else {
+                            // 3) No: pido permiso
+                            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5))
                 ) {
                     Icon(Icons.Default.CameraAlt, contentDescription = "Cámara")

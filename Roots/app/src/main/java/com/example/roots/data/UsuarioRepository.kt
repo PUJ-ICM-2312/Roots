@@ -20,6 +20,7 @@ object UsuarioRepository {
             cedula     = "1234567890"
         )
     )
+
         private set
 
     fun updateUsuario(nuevo: Usuario) {
