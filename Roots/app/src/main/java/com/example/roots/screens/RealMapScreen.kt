@@ -29,6 +29,9 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.example.roots.data.MockInmuebles
+import com.example.roots.model.Inmueble
+
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,6 +39,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    // Dentro de RealMapScreen, justo antes del GoogleMap:
+    val inmuebles = remember { MockInmuebles.sample }
+
 
     // Estado para la ubicación del usuario
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -84,14 +90,14 @@ fun RealMapScreen(navController: NavController) {
         }
     }
 
-    val markers = listOf(
+    /*val markers = listOf(
         LatLng(4.6275, -74.0638) to "Apartamento cerca de la Cl. 40a",
         LatLng(4.6281, -74.0643) to "Casa amplia en Chapinero",
         LatLng(4.6268, -74.0625) to "Estudio en edificio moderno",
         LatLng(4.6259, -74.0651) to "Apartamento con vista a parque",
         LatLng(4.6290, -74.0620) to "Penthouse en zona exclusiva",
         LatLng(4.6245, -74.0640) to "Habitación económica cerca de transporte"
-    )
+    )*/
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
@@ -123,13 +129,26 @@ fun RealMapScreen(navController: NavController) {
                 )
             ) {
                 // Marcadores de propiedades
-                markers.forEach { (position, title) ->
+               /* markers.forEach { (position, title) ->
                     Marker(
                         state = MarkerState(position = position),
                         title = title,
                         snippet = "Ver más..."
                     )
+                }*/
+                inmuebles.forEach { inmueble ->
+                    Marker(
+                        state   = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
+                        title   = inmueble.direccion,
+                        snippet = "₡${inmueble.precio} • ${inmueble.metrosCuadrados}m²",
+                        onClick = {
+                            // Navegar al detalle del inmueble
+                            navController.navigate("${Screen.PropertyScrollMode.route}/${inmueble.id}")
+                            true
+                        }
+                    )
                 }
+
 
                 // Marcador de la ubicación del usuario
                 userLocation?.let {
