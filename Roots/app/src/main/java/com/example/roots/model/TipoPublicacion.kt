@@ -1,6 +1,7 @@
 package com.example.roots.model
 
-data class TipoPublicacion (
-    val tipo: String
-
-)
+enum class TipoPublicacion(val label: String) {
+    Venta("Venta"),
+    Arriendo("Arriendo"),
+    Temporada("Temporada")
+}

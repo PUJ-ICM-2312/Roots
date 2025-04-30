@@ -1,9 +1,11 @@
 package com.example.roots.model
 
-data class TipoInmueble (
-    val tipo: String
-
-)
-
+enum class TipoInmueble(val label: String) {
+    Apartamento("Apartamento"),
+    Casa("Casa"),
+    Penthouse("Penthouse"),
+    LocalComercial("Local Comercial"),
+    Lote("Lote")
+}
 
 

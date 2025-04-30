@@ -16,6 +16,9 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
+import com.example.roots.data.MockInmuebles
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,6 +104,18 @@ fun NavigationStack() {
                 composable(Screen.MapPreview.route) { MapScreenPreview(navController) }
                 composable(Screen.RealMap.route) { RealMapScreen(navController) }
                 composable(Screen.Favorites.route) { FavoritesScreen(navController)}
+                composable(
+                    route = "${Screen.PropertyScrollMode.route}/{propertyId}",
+                    arguments = listOf(
+                        navArgument("propertyId") { type = NavType.IntType }
+                    )
+                ) { backStack ->
+                    val id = backStack.arguments?.getInt("propertyId") ?: return@composable
+                    val inmueble = MockInmuebles.sample.firstOrNull { it.id == id }
+                    inmueble?.let {
+                        PropertyScrollModeScreen(navController = navController, inmueble = it)
+                    }
+                }
             }
         }
     }
