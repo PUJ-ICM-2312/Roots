@@ -17,14 +17,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 
 import com.example.roots.screens.Screen
 import com.example.roots.services.SecureStorage
 import com.example.roots.services.showBiometricPrompt
+import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
