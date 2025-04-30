@@ -40,7 +40,6 @@ fun NavigationStack() {
         Screen.Payment,
         Screen.PaymentSuccess,
         Screen.Plans,
-        Screen.PropertyScrollMode,
         Screen.Settings,
         Screen.Filter,
         Screen.EditProfile,

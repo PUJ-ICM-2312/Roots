@@ -14,7 +14,7 @@ data class Inmueble(
     val barrio: String,
     val ciudad: String,
     val descripcion: String,
-    val fotos: List<String>,
+    val fotos: List<Any>,
     val tipoPublicacion: TipoPublicacion,
     val tipoInmueble: TipoInmueble,
     val numFavoritos: Int = 0,

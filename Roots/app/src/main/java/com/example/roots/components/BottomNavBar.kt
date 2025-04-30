@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.roots.screens.Screen
 import androidx.navigation.compose.currentBackStackEntryAsState
 
 @Composable
@@ -50,11 +51,13 @@ fun BottomNavBar(navController: NavController) {
                     )
                 }
 
-                IconButton(onClick = { navController.navigate("real_map") }) {
+                IconButton(
+                    onClick = { navController.navigate(Screen.RealMap.route) }
+                ) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar inmuebles",
-                        tint = if (currentRoute == "search") Color(0xFF2E7D32) else Color.Black
+                        tint = if (currentRoute == Screen.RealMap.route) Color(0xFF2E7D32) else Color.Black
                     )
                 }
 

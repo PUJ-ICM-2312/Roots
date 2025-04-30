@@ -34,6 +34,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.roots.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.roots.components.BottomNavBar
 import com.example.roots.model.Inmueble
 import com.example.roots.model.TipoInmueble
 import com.example.roots.model.TipoPublicacion
@@ -288,6 +289,7 @@ fun AddPropertyScreen(navController: NavController) {
 
                     val lat = propertyLatLng?.latitude
                     val lng = propertyLatLng?.longitude
+
                     if (lat == null || lng == null) {
                         Toast.makeText(context, "Primero busca la ubicación", Toast.LENGTH_SHORT).show()
                     } else {
@@ -315,7 +317,8 @@ fun AddPropertyScreen(navController: NavController) {
                             longitud                   = lng
                         )
                         InmuebleRepository.add(nuevo)
-                        navController.popBackStack()
+
+                        navController.navigate("${Screen.PropertyScrollMode.route}/${nuevo.id}")
                     }
                 },
                 shape = RoundedCornerShape(50),

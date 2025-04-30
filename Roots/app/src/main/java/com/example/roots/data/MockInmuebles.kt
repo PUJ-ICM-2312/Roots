@@ -20,7 +20,11 @@ object MockInmuebles {
             barrio = "La Castellana",
             ciudad = "Bogotá",
             descripcion = "Apartamento amplio con buena iluminación",
-            fotos = listOf("https://.../img1.jpg"),
+            fotos = listOf(
+                R.drawable.inmueble1,
+                R.drawable.inmueble3,
+                R.drawable.inmueble6
+            ),
             tipoPublicacion = TipoPublicacion.Venta,
             tipoInmueble = TipoInmueble.Apartamento,
             numFavoritos = 0,
@@ -42,7 +46,11 @@ object MockInmuebles {
             barrio = "El Country",
             ciudad = "Bogotá",
             descripcion = "Penthouse con terraza",
-            fotos = listOf("https://.../img2.jpg"),
+            fotos = listOf(
+                R.drawable.inmueble2,
+                R.drawable.inmueble4,
+                R.drawable.inmueble6
+            ),
             tipoPublicacion = TipoPublicacion.Venta,
             tipoInmueble = TipoInmueble.Penthouse,
             numFavoritos = 0,
@@ -65,8 +73,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Apartamento luminoso con balcón y vista al parque.",
             fotos                      = listOf(
-                "https://example.com/bogota3-1.jpg",
-                "https://example.com/bogota3-2.jpg"
+                R.drawable.inmueble2,
+                R.drawable.inmueble6,
+                R.drawable.inmueble1
             ),
             tipoPublicacion            = TipoPublicacion.Venta,
             tipoInmueble               = TipoInmueble.Apartamento,
@@ -91,7 +100,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Apartaestudio moderno en zona gastronómica.",
             fotos                      = listOf(
-                "https://example.com/bogota4-1.jpg"
+                R.drawable.inmueble1,
+                R.drawable.inmueble2,
+                R.drawable.inmueble3
             ),
             tipoPublicacion            = TipoPublicacion.Arriendo,
             tipoInmueble               = TipoInmueble.Apartaestudio,
@@ -116,8 +127,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Cómodo dúplex cerca de la zona universitaria.",
             fotos                      = listOf(
-                "https://example.com/bogota5-1.jpg",
-                "https://example.com/bogota5-2.jpg"
+                R.drawable.inmueble4,
+                R.drawable.inmueble5,
+                R.drawable.inmueble6
             ),
             tipoPublicacion            = TipoPublicacion.Venta,
             tipoInmueble               = TipoInmueble.Casa,
@@ -142,7 +154,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Local comercial en sector residencial, alto tránsito.",
             fotos                      = listOf(
-                "https://example.com/bogota6-1.jpg"
+                R.drawable.inmueble1,
+                R.drawable.inmueble4,
+                R.drawable.inmueble5
             ),
             tipoPublicacion            = TipoPublicacion.Venta,
             tipoInmueble               = TipoInmueble.LocalComercial,
@@ -167,7 +181,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Habitación amoblada en casa familiar, ideal para estudiantes.",
             fotos                      = listOf(
-                "https://example.com/bogota7-1.jpg"
+                R.drawable.inmueble4,
+                R.drawable.inmueble3,
+                R.drawable.inmueble2
             ),
             tipoPublicacion            = TipoPublicacion.Arriendo,
             tipoInmueble               = TipoInmueble.Apartamento,
