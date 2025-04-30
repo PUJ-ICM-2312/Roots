@@ -9,21 +9,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.example.roots.screens.*
 import com.example.roots.ui.theme.RootsTheme
+import com.google.android.libraries.places.api.Places
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Inicializar Places API con tu API Key
+        if (!Places.isInitialized()) {
+            Places.initialize(
+                applicationContext,
+                "AIzaSyDKjhqaBtcvLF4zW_VsHkXZYi3y4lCWeh0"
+            )
+        }
+
         enableEdgeToEdge()
         setContent {
-            RootsTheme {/*
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }*/
-                // Para probar la pantalla que hagan, deben primero crearla en la carpeta screens
-                // Luego poner el nombre acá abajo, así cuando se corra esta vaina, se abre esa pantalla
+            RootsTheme {
+                // Puedes cambiar esta línea para probar otras pantallas
                 NavigationStack()
             }
         }
