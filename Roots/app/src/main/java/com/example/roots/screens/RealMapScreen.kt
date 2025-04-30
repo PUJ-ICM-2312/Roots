@@ -185,6 +185,7 @@ fun RealMapScreen(navController: NavController) {
                         state   = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
                         title   = inmueble.direccion,
                         snippet = "₡${inmueble.precio} • ${inmueble.metrosCuadrados}m²",
+                        icon    = markerIcon, // ¡aquí está lo que faltaba!
                         onClick = {
                             // Navegar al detalle del inmueble
                             navController.navigate("${Screen.PropertyScrollMode.route}/${inmueble.id}")

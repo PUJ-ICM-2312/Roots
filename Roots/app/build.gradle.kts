@@ -70,10 +70,9 @@ dependencies {
     implementation ("androidx.activity:activity-compose:1.7.2")
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
-
-
-
-
+    implementation ("androidx.compose.runtime:runtime-saveable:1.6.0")
+    implementation("com.google.android.libraries.places:places:3.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
 
 
 }
