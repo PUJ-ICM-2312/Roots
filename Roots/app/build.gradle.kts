@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -61,6 +62,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("io.coil-kt:coil-gif:2.4.0")
     implementation("androidx.compose.animation:animation:1.5.1")
+    implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.compose.foundation:foundation:1.6.1")
+
 
     // Firebase cosas
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
