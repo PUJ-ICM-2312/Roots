@@ -97,23 +97,27 @@ fun ImageCarousel(inmueble: Inmueble) {
             .height(220.dp)
             .padding(8.dp)
     ) { page ->
-       /* Image(
-            painter = painterResource(id = images[page]),
-            contentDescription = "Property Image",
-            modifier = Modifier
+        when (val item = inmueble.fotos[page]) {
+            is Int    -> Image(
+                painter            = painterResource(id = item),
+                contentDescription = null,
+                modifier           = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale       = ContentScale.Crop
+            )
+            is String -> AsyncImage(
+                model              = item,
+                contentDescription = null,
+                modifier           = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale       = ContentScale.Crop
+            )
+            else      -> Spacer(modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Crop
-        )*/
-
-        AsyncImage(
-            model = inmueble.fotos[page],
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp)),
-            contentScale = ContentScale.Crop
-        )
+                .height(220.dp))  // fallback
+        }
     }
 }
 
@@ -146,9 +150,12 @@ fun PropertyHeaderInfo(inmueble: Inmueble) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        val anti = inmueble.antiguedad
         Text("Antigüedad: ")
-        Text("$inmueble.antiguedad años")
-
+        if (anti <= 1)
+            Text("$anti año")
+        else
+            Text("$anti años")
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
