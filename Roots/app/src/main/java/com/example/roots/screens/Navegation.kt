@@ -19,6 +19,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
 import com.example.roots.data.MockInmuebles
+import com.example.roots.model.Inmueble
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +96,7 @@ fun NavigationStack() {
                 composable(Screen.Payment.route) { PaymentScreen(navController) }
                 composable(Screen.PaymentSuccess.route) { PaymentSuccessScreen(navController) }
                 composable(Screen.Plans.route) { PlansScreen(navController) }
-                composable(Screen.PropertyScrollMode.route) { PropertyScrollModeScreen(navController) }
+                //composable(Screen.PropertyScrollMode.route) { PropertyScrollModeScreen(navController) }
                 composable(Screen.Settings.route) { SettingsScreen(navController) }
                 composable(Screen.Filter.route) { FilterScreen(navController) }
                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
@@ -113,7 +114,10 @@ fun NavigationStack() {
                     val id = backStack.arguments?.getInt("propertyId") ?: return@composable
                     val inmueble = MockInmuebles.sample.firstOrNull { it.id == id }
                     inmueble?.let {
-                        PropertyScrollModeScreen(navController = navController, inmueble = it)
+                        PropertyScrollModeScreen(
+                            navController = navController,
+                            inmueble = it
+                        )
                     }
                 }
             }

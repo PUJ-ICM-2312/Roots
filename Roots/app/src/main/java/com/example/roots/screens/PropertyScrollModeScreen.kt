@@ -31,10 +31,14 @@ import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.example.roots.model.Inmueble
+import com.example.roots.data.MockInmuebles
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PropertyScrollModeScreen(navController: NavController) {
+fun PropertyScrollModeScreen(navController: NavController, inmueble: Inmueble) {
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) {
@@ -43,8 +47,8 @@ fun PropertyScrollModeScreen(navController: NavController) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            ImageCarousel()
-            PropertyHeaderInfo()
+            ImageCarousel(inmueble)
+            PropertyHeaderInfo(inmueble)
             PropertyDescription()
             PropertyLocation()
             PropertyMap()
@@ -55,7 +59,7 @@ fun PropertyScrollModeScreen(navController: NavController) {
 }
 
 @Composable
-fun ImageCarousel() {
+fun ImageCarousel(inmueble: Inmueble) {
     val images = listOf(
         R.drawable.inmueble1,
         R.drawable.inmueble2,
@@ -65,9 +69,7 @@ fun ImageCarousel() {
         R.drawable.inmueble6
     )
 
-    val pagerState = rememberPagerState(
-        pageCount = { images.size } // ✅ lambda, no valor directo
-    )
+    val pagerState = rememberPagerState(pageCount = { inmueble.fotos.size })
 
     HorizontalPager(
         state = pagerState,
@@ -77,9 +79,18 @@ fun ImageCarousel() {
             .height(220.dp)
             .padding(8.dp)
     ) { page ->
-        Image(
+       /* Image(
             painter = painterResource(id = images[page]),
             contentDescription = "Property Image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Crop
+        )*/
+
+        AsyncImage(
+            model = inmueble.fotos[page],
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp)),
@@ -90,11 +101,15 @@ fun ImageCarousel() {
 
 
 @Composable
-fun PropertyHeaderInfo() {
+fun PropertyHeaderInfo(inmueble: Inmueble) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Apartamento en Venta", fontWeight = FontWeight.Bold, fontSize = 22.sp)
+       /* Text("Apartamento en Venta", fontWeight = FontWeight.Bold, fontSize = 22.sp)
         Text("$990.000.000", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF1A1A1A))
-        Text("+ $757.000 administración", color = Color.Gray)
+        Text("+ $757.000 administración", color = Color.Gray)*/
+
+        Text(inmueble.direccion, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+        Text("₡${inmueble.precio}")
+        Text("+ ₡${inmueble.mensualidadAdministracion} administración")
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -102,10 +117,14 @@ fun PropertyHeaderInfo() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            PropertyFeature(Icons.Default.Bed, "3 Habs")
+            /*PropertyFeature(Icons.Default.Bed, "3 Habs")
             PropertyFeature(Icons.Default.Shower, "3 Baños")
             PropertyFeature(Icons.Default.SquareFoot, "110 m²")
-            PropertyFeature(Icons.Default.DirectionsCar, "2 Parqueaderos")
+            PropertyFeature(Icons.Default.DirectionsCar, "2 Parqueaderos")*/
+
+            PropertyFeature(Icons.Default.Bed, "${inmueble.numHabitaciones} Habs")
+            PropertyFeature(Icons.Default.Shower, "${inmueble.numBaños} Baños")
+            PropertyFeature(Icons.Default.SquareFoot, "${inmueble.metrosCuadrados} m²")
         }
     }
 }
@@ -194,3 +213,16 @@ fun PropertyFeature(icon: ImageVector, label: String) {
         Text(text = label)
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPropertyScrollMode() {
+    RootsTheme {
+        // Coge un mock cualquiera:
+        PropertyScrollModeScreen(
+            navController = rememberNavController(),
+            inmueble      = MockInmuebles.sample.first()
+        )
+    }
+}
+
