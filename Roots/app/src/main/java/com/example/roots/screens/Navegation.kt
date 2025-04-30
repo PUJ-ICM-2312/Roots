@@ -43,7 +43,8 @@ fun NavigationStack() {
         Screen.Welcome,
         Screen.SignUp,
         Screen.FakeMap,
-        Screen.RealMap
+        Screen.RealMap,
+        Screen.Favorites
     )
 
     ModalNavigationDrawer(
@@ -99,6 +100,7 @@ fun NavigationStack() {
                 composable(Screen.FakeMap.route) { MapScreenPreview(navController) }
                 composable(Screen.MapPreview.route) { MapScreenPreview(navController) }
                 composable(Screen.RealMap.route) { RealMapScreen(navController) }
+                composable(Screen.Favorites.route) { FavoritesScreen(navController)}
             }
         }
     }
@@ -125,4 +127,5 @@ sealed class Screen(val route: String) {
     object FakeMap : Screen("fake_map")
     object MapPreview : Screen("map_preview")
     object RealMap : Screen("real_map")
+    object Favorites : Screen("favorites")
 }

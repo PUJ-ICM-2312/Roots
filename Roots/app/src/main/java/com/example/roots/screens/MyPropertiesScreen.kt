@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun MyPropertiesScreen(navController: NavController) {
@@ -133,3 +134,12 @@ fun PropertyCard(imageId: Int, title: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMyProperties() {
+    RootsTheme {
+        MyPropertiesScreen(navController = rememberNavController())
+    }
+}
+
