@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.ui.theme.RootsTheme
 import androidx.navigation.NavController
+import com.example.roots.components.BottomNavBar
 
 
 @Composable

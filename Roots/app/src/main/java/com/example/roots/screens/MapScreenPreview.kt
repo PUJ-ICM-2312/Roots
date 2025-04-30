@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import androidx.navigation.NavController
+import com.example.roots.components.BottomNavBar
 
 @Composable
 fun MapScreenPreview(navController: NavController) {

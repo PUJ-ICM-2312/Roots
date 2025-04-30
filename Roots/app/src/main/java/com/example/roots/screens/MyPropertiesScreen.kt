@@ -27,6 +27,7 @@ import com.example.roots.data.InmuebleRepository
 import com.example.roots.model.Inmueble
 import coil.compose.AsyncImage
 import androidx.compose.foundation.clickable
+import com.example.roots.components.BottomNavBar
 
 
 @Composable

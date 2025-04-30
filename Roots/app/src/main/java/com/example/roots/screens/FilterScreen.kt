@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.roots.components.BottomNavBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.example.roots.ui.theme.RootsTheme
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.roots.components.BottomNavBar
 
 
 @Composable
@@ -126,7 +127,7 @@ fun SubscriptionCard(title: String, features: List<String>) {
     }
 }
 
-@Composable
+/*@Composable
 fun BottomNavBar(navController: NavController) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
@@ -161,7 +162,7 @@ fun BottomNavBar(navController: NavController) {
                     )
                 }
 
-                IconButton(onClick = { navController.navigate("search") }) {
+                IconButton(onClick = { navController.navigate("real_map") }) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar inmuebles",
@@ -188,5 +189,5 @@ fun BottomNavBar(navController: NavController) {
         }
     }
 }
-
+*/
 

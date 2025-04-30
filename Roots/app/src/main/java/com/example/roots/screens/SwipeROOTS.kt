@@ -27,7 +27,7 @@ import androidx.compose.animation.with
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.navigation.NavController
-
+import com.example.roots.components.BottomNavBar
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
