@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.example.roots.screens.*
 import com.example.roots.ui.theme.RootsTheme
 import com.google.android.libraries.places.api.Places
+import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,10 +24,18 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         setContent {
-            RootsTheme {
-                // Puedes cambiar esta línea para probar otras pantallas
+            RootsTheme {/*
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    Greeting(
+                        name = "Android",
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }*/
+                // Para probar la pantalla que hagan, deben primero crearla en la carpeta screens
+                // Luego poner el nombre acá abajo, así cuando se corra esta vaina, se abre esa pantalla
                 NavigationStack()
             }
         }

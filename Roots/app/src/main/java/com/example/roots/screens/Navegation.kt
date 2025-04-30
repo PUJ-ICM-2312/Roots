@@ -1,5 +1,8 @@
 package com.example.roots.screens
 
+import LoginScreen
+import SignUpScreen
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -112,13 +115,12 @@ fun NavigationStack() {
                     )
                 ) { backStack ->
                     val id = backStack.arguments?.getInt("propertyId") ?: return@composable
-                    val inmueble = MockInmuebles.sample.firstOrNull { it.id == id }
-                    inmueble?.let {
-                        PropertyScrollModeScreen(
-                            navController = navController,
-                            inmueble = it
-                        )
-                    }
+
+                    PropertyScrollModeScreen(
+                        navController = navController,
+                        propertyId    = id
+                    )
+
                 }
             }
         }

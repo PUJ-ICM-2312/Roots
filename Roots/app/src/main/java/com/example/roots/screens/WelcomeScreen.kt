@@ -21,7 +21,7 @@ import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 
 @Composable
-fun WelcomeScreen(navController: NavController = rememberNavController()) {
+fun WelcomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,8 +48,7 @@ fun WelcomeScreen(navController: NavController = rememberNavController()) {
 
         Button(
             onClick = {
-                // Navegar a la pantalla de Login usando la ruta definida
-                navController.navigate("login")
+                navController.navigate(Screen.Login.route)
             },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
@@ -62,8 +61,7 @@ fun WelcomeScreen(navController: NavController = rememberNavController()) {
 
         Button(
             onClick = {
-                // Navegar a la pantalla de SignUp usando la ruta definida
-                navController.navigate("signup")
+                navController.navigate(Screen.SignUp.route)
             },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
@@ -77,7 +75,8 @@ fun WelcomeScreen(navController: NavController = rememberNavController()) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewWelcomeScreen() {
+
     RootsTheme {
-        WelcomeScreen()
+        WelcomeScreen(rememberNavController())
     }
 }

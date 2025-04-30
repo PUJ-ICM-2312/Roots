@@ -53,7 +53,7 @@ fun MyPropertiesScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // TODO: Acción para agregar inmueble (por ejemplo, navegar a otra pantalla)
+                    navController.navigate("add_property")
                 },
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5)),
