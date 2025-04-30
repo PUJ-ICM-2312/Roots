@@ -21,11 +21,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun MyPropertiesScreen() {
+fun MyPropertiesScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier
@@ -51,7 +53,7 @@ fun MyPropertiesScreen() {
 
             Button(
                 onClick = {
-                    // TODO: Acción para agregar inmueble (por ejemplo, navegar a otra pantalla)
+                    navController.navigate("add_property")
                 },
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5)),
@@ -132,3 +134,12 @@ fun PropertyCard(imageId: Int, title: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMyProperties() {
+    RootsTheme {
+        MyPropertiesScreen(navController = rememberNavController())
+    }
+}
+

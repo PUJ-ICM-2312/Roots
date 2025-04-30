@@ -19,11 +19,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.Scaffold
-
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FilterScreen() {
+fun FilterScreen(navController: NavController) {
     var address by remember { mutableStateOf("") }
     var bathrooms by remember { mutableStateOf("") }
     var rooms by remember { mutableStateOf("") }
@@ -68,8 +69,8 @@ fun FilterScreen() {
             modifier = Modifier.fillMaxWidth()
         )
 
-        FilterSection("Tipo de Transacción", transactionTypes, selectedTransactions)
-        FilterSection("Tipo de Propiedad", propertyTypes, selectedProperties)
+        FilterSection("Tipo de Transacción", transactionTypes, selectedTransactions, navController)
+        FilterSection("Tipo de Propiedad", propertyTypes, selectedProperties, navController)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -81,9 +82,9 @@ fun FilterScreen() {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun FilterSection(title: String, options: List<String>, selectedOptions: MutableMap<String, Boolean>) {
+fun FilterSection(title: String, options: List<String>, selectedOptions: MutableMap<String, Boolean>, navController: NavController) {
     Scaffold(
-        bottomBar = { BottomNavBar() },
+        bottomBar = { BottomNavBar(navController) },
     ){
         Column(
             modifier = Modifier
@@ -113,5 +114,5 @@ fun FilterSection(title: String, options: List<String>, selectedOptions: Mutable
 @Preview(showBackground = true)
 @Composable
 fun PreviewFiltersScreen() {
-    FilterScreen()
+    FilterScreen(navController = rememberNavController())
 }

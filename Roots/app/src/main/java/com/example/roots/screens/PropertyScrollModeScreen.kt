@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,43 +32,62 @@ import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import com.example.roots.model.Inmueble
+import com.example.roots.data.InmuebleRepository
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PropertyScrollModeScreen() {
+fun PropertyScrollModeScreen(
+    navController: NavController,
+    propertyId: Int
+) {
+    // 2) Recupera el inmueble del repositorio
+    val inmueble = remember(propertyId) {
+        InmuebleRepository.inmuebles.firstOrNull { it.id == propertyId }
+    } ?: run {
+        // Si no existe, vuelve atrás o muestra un placeholder
+        LaunchedEffect(Unit) { navController.popBackStack() }
+        return
+    }
+
     Scaffold(
-        bottomBar = { BottomNavBar() }
+        bottomBar = { BottomNavBar(navController) }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            ImageCarousel()
-            PropertyHeaderInfo()
-            PropertyDescription()
-            PropertyLocation()
-            PropertyMap()
-            ContactButton()
+            ImageCarousel(inmueble)
+            PropertyHeaderInfo(inmueble)
+            PropertyDescription(inmueble)
+            PropertyLocation(inmueble)
+            PropertyMap(inmueble)
+            ContactButton(inmueble)
             Spacer(modifier = Modifier.height(80.dp)) // Para dar espacio al navbar
         }
     }
 }
 
 @Composable
-fun ImageCarousel() {
-    val images = listOf(
+fun ImageCarousel(inmueble: Inmueble) {
+    /*val images = listOf(
         R.drawable.inmueble1,
         R.drawable.inmueble2,
         R.drawable.inmueble3,
         R.drawable.inmueble4,
         R.drawable.inmueble5,
         R.drawable.inmueble6
-    )
+    )*/
 
-    val pagerState = rememberPagerState(
-        pageCount = { images.size } // ✅ lambda, no valor directo
-    )
+    val pagerState = rememberPagerState(pageCount = { inmueble.fotos.size })
 
     HorizontalPager(
         state = pagerState,
@@ -76,9 +97,18 @@ fun ImageCarousel() {
             .height(220.dp)
             .padding(8.dp)
     ) { page ->
-        Image(
+       /* Image(
             painter = painterResource(id = images[page]),
             contentDescription = "Property Image",
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Crop
+        )*/
+
+        AsyncImage(
+            model = inmueble.fotos[page],
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp)),
@@ -89,11 +119,44 @@ fun ImageCarousel() {
 
 
 @Composable
-fun PropertyHeaderInfo() {
+fun PropertyHeaderInfo(inmueble: Inmueble) {
+    val formattedPrice = remember(inmueble.precio) {
+        NumberFormat.getNumberInstance(Locale.US)
+            .format(inmueble.precio.toLong())
+    }
+    val formattedPriceAdmin = remember(inmueble.mensualidadAdministracion) {
+        NumberFormat.getNumberInstance(Locale.US)
+            .format(inmueble.mensualidadAdministracion.toLong())
+    }
+
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Apartamento en Venta", fontWeight = FontWeight.Bold, fontSize = 22.sp)
+       /* Text("Apartamento en Venta", fontWeight = FontWeight.Bold, fontSize = 22.sp)
         Text("$990.000.000", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF1A1A1A))
-        Text("+ $757.000 administración", color = Color.Gray)
+        Text("+ $757.000 administración", color = Color.Gray)*/
+
+        Text(inmueble.direccion, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(inmueble.ciudad + ", " + inmueble.barrio, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val fechaTexto = sdf.format(Date(inmueble.fechaPublicacion))
+        Text("Publicado el $fechaTexto")
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text("Antigüedad: ")
+        Text("$inmueble.antiguedad años")
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "$ $formattedPrice",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = Color(0xFF1A1A1A))
+        Text("$ $formattedPriceAdmin administración")
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -101,41 +164,42 @@ fun PropertyHeaderInfo() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            PropertyFeature(Icons.Default.Bed, "3 Habs")
+            /*PropertyFeature(Icons.Default.Bed, "3 Habs")
             PropertyFeature(Icons.Default.Shower, "3 Baños")
             PropertyFeature(Icons.Default.SquareFoot, "110 m²")
-            PropertyFeature(Icons.Default.DirectionsCar, "2 Parqueaderos")
+            PropertyFeature(Icons.Default.DirectionsCar, "2 Parqueaderos")*/
+
+            PropertyFeature(Icons.Default.Bed, "${inmueble.numHabitaciones} Habs")
+            PropertyFeature(Icons.Default.Shower, "${inmueble.numBaños} Baños")
+            PropertyFeature(Icons.Default.SquareFoot, "${inmueble.metrosCuadrados} m²")
+            PropertyFeature(Icons.Default.DirectionsCar, "${inmueble.numParqueaderos} Parqueaderos")
         }
     }
 }
 
 @Composable
-fun PropertyDescription() {
+fun PropertyDescription(inmueble: Inmueble) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Descripción", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text("""
-            Vendo El Chico ALEGÓ, Área de 110 m2, muy bien aprovechados,
-            8 piso exterior, muy iluminado con una vista envidiable, 15 años de construido,
-            3 habitaciones, 3 baños, Estudio, Pisos laminados madera,
-            Sala y comedor, Ventanales piso techo, Balcón, Chimenea a gas,
-            Cocina abierta con barra, Zona de lavandería ventilada, 2 parqueaderos.
-        """.trimIndent())
+        Text(" ${inmueble.descripcion} ".trimIndent())
+
     }
 }
 
 @Composable
-fun PropertyLocation() {
+fun PropertyLocation(inmueble: Inmueble) {
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Ubicación principal", fontWeight = FontWeight.Bold)
-        Text("El chico, Bogotá, Bogotá, D.C.")
-        Spacer(modifier = Modifier.height(4.dp))
-        Text("Ubicaciones asociadas", fontWeight = FontWeight.Bold)
-        Text("El Chico, Barrios Unidos, Chico Norte, Chapinero...")
+        Text("Ubicación principal", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Spacer(Modifier.height(4.dp))
+        // Mostramos barrio y ciudad desde el inmueble
+        Text("${inmueble.barrio}, ${inmueble.ciudad}", fontSize = 16.sp)
+
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
-fun PropertyMap() {
+fun PropertyMap(inmueble: Inmueble) {
     Box(modifier = Modifier
         .fillMaxWidth()
         .height(250.dp)
@@ -162,7 +226,7 @@ fun PropertyMap() {
 }
 
 @Composable
-fun ContactButton() {
+fun ContactButton(inmueble: Inmueble) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -193,3 +257,17 @@ fun PropertyFeature(icon: ImageVector, label: String) {
         Text(text = label)
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewPropertyScrollMode() {
+    RootsTheme {
+        // Si quieres previsualizar:
+        val first = InmuebleRepository.inmuebles.first()
+        PropertyScrollModeScreen(
+            navController = rememberNavController(),
+            propertyId    = first.id
+        )
+    }
+}
+

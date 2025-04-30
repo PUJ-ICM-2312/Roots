@@ -1,8 +1,12 @@
+package com.example.roots.screens
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,7 +27,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun SignUpScreen() {
     val context = LocalContext.current
     val auth = remember { FirebaseAuth.getInstance() }
-
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -46,7 +49,7 @@ fun SignUpScreen() {
         )
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -121,6 +124,7 @@ fun SignUpScreen() {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9AF5B4)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier.fillMaxWidth()
+
             ) {
                 Text(if (isLoading) "Registrando..." else "Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
@@ -153,6 +157,21 @@ fun SignUpScreen() {
                     )
                 }
             }
+
+            TextButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.padding(top = 16.dp)
+            ) {
+                Text("¿Ya tienes cuenta? Inicia sesión")
+            }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SignUpScreenPreview() {
+    RootsTheme {
+        SignUpScreen(navController = rememberNavController())
     }
 }

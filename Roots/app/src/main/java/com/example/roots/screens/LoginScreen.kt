@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.roots.R
+
 import com.example.roots.screens.Screen
 import com.example.roots.services.SecureStorage
 import com.example.roots.services.showBiometricPrompt
@@ -30,7 +31,6 @@ import com.google.firebase.auth.FirebaseAuth
 fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -173,5 +173,13 @@ fun LoginScreen(navController: NavController) {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewLoginScreen() {
+    RootsTheme {
+        LoginScreen(navController = rememberNavController())
     }
 }

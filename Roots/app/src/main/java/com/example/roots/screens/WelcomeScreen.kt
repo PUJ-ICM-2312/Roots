@@ -30,7 +30,7 @@ fun WelcomeScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.logo), // Reemplaza con tu logo
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo de Roots",
             modifier = Modifier.size(100.dp)
         )
