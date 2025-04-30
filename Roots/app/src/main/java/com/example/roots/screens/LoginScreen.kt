@@ -19,13 +19,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.roots.R
+import com.example.roots.screens.Screen
 import com.example.roots.services.SecureStorage
 import com.example.roots.services.showBiometricPrompt
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
 
@@ -134,6 +136,7 @@ fun LoginScreen() {
                         val (savedEmail, savedPassword) = SecureStorage.getCredentials(context)
                         if (!savedEmail.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
                             handleLogin(savedEmail, savedPassword)
+                            navController.navigate(Screen.FakeMap.route)
                         } else {
                             Toast.makeText(context, "No hay credenciales guardadas", Toast.LENGTH_SHORT).show()
                         }

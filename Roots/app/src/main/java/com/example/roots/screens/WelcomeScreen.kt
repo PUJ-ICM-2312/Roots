@@ -15,11 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 
 @Composable
-fun WelcomeScreen() {
+fun WelcomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -45,7 +47,9 @@ fun WelcomeScreen() {
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { /* Acción de iniciar sesión */ },
+            onClick = {
+                navController.navigate(Screen.Login.route)
+            },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f)
@@ -56,7 +60,9 @@ fun WelcomeScreen() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* Acción de registrarse */ },
+            onClick = {
+                navController.navigate(Screen.SignUp.route)
+            },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f)
@@ -69,7 +75,8 @@ fun WelcomeScreen() {
 @Preview(showBackground = true)
 @Composable
 fun PreviewWelcomeScreen() {
+
     RootsTheme {
-        WelcomeScreen()
+        WelcomeScreen(rememberNavController())
     }
 }
