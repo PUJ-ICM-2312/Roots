@@ -3,6 +3,7 @@ package com.example.roots.data
 import com.example.roots.model.Inmueble
 import com.example.roots.model.TipoInmueble
 import com.example.roots.model.TipoPublicacion
+import com.example.roots.R
 
 object MockInmuebles {
     val sample = listOf(
