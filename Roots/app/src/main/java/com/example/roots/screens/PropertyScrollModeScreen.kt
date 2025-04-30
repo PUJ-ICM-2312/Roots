@@ -16,8 +16,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,6 +28,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +47,21 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import com.example.roots.components.BottomNavBar
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -212,22 +231,56 @@ fun PropertyMap(inmueble: Inmueble) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
     }
 
-    // Obtener ubicación del usuario una vez
     LaunchedEffect(Unit) {
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 location?.let {
-                    userLocation = LatLng(it.latitude, it.longitude)
+                    val origin = LatLng(it.latitude, it.longitude)
+                    userLocation = origin
+
+                    val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=AIzaSyDKjhqaBtcvLF4zW_VsHkXZYi3y4lCWeh0"
+
+
+                    val client = okhttp3.OkHttpClient()
+                    val request = okhttp3.Request.Builder().url(url).build()
+
+                    // Mueve la red al hilo de IO
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val response = client.newCall(request).execute()
+                            val body = response.body?.string()
+
+                            body?.let { json ->
+                                val jsonObject = org.json.JSONObject(json)
+                                val routes = jsonObject.getJSONArray("routes")
+                                if (routes.length() > 0) {
+                                    val overviewPolyline = routes
+                                        .getJSONObject(0)
+                                        .getJSONObject("overview_polyline")
+                                        .getString("points")
+
+                                    val decoded = decodePolyline(overviewPolyline)
+                                    withContext(Dispatchers.Main) {
+                                        routePoints = decoded
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
             }
         } catch (e: SecurityException) {
-            // Manejo de permisos si es necesario
+            e.printStackTrace()
         }
     }
+
 
     Box(
         modifier = Modifier
@@ -251,17 +304,16 @@ fun PropertyMap(inmueble: Inmueble) {
                     state = MarkerState(position = it),
                     title = "Tú"
                 )
-                Polyline(
-                    points = listOf(it, LatLng(inmueble.latitud, inmueble.longitud)),
-                    color = Color.Blue,
-                    width = 6f
-                )
+            }
+            if (routePoints.isNotEmpty()) {
+                Polyline(points = routePoints, color = Color.Blue, width = 6f)
             }
         }
 
         IconButton(
             onClick = {
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
+                cameraPositionState.position =
+                    CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -273,6 +325,7 @@ fun PropertyMap(inmueble: Inmueble) {
         }
     }
 }
+
 
 
 @Composable
@@ -320,4 +373,40 @@ fun PreviewPropertyScrollMode() {
         )
     }
 }
+
+fun decodePolyline(encoded: String): List<LatLng> {
+    val poly = mutableListOf<LatLng>()
+    var index = 0
+    val len = encoded.length
+    var lat = 0
+    var lng = 0
+
+    while (index < len) {
+        var b: Int
+        var shift = 0
+        var result = 0
+        do {
+            b = encoded[index++].code - 63
+            result = result or ((b and 0x1f) shl shift)
+            shift += 5
+        } while (b >= 0x20)
+        val dlat = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
+        lat += dlat
+
+        shift = 0
+        result = 0
+        do {
+            b = encoded[index++].code - 63
+            result = result or ((b and 0x1f) shl shift)
+            shift += 5
+        } while (b >= 0x20)
+        val dlng = if ((result and 1) != 0) (result shr 1).inv() else result shr 1
+        lng += dlng
+
+        val latLng = LatLng(lat / 1E5, lng / 1E5)
+        poly.add(latLng)
+    }
+    return poly
+}
+
 
