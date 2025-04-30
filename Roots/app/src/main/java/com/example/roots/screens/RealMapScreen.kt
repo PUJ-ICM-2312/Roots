@@ -18,9 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.components.BottomNavBar
+import com.example.roots.ui.theme.RootsTheme
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -186,4 +189,12 @@ private fun requestLocationUpdates(
         locationCallback,
         Looper.getMainLooper()
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewMap() {
+    RootsTheme {
+        RealMapScreen(navController = rememberNavController())
+    }
 }

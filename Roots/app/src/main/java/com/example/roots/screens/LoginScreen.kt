@@ -78,7 +78,7 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { /* Acción de iniciar sesión */ },
+            onClick = { navController.navigate("real_map") },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f)

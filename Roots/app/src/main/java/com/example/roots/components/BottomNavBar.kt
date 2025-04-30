@@ -50,7 +50,7 @@ fun BottomNavBar(navController: NavController) {
                     )
                 }
 
-                IconButton(onClick = { navController.navigate("search") }) {
+                IconButton(onClick = { navController.navigate("real_map") }) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Buscar inmuebles",
