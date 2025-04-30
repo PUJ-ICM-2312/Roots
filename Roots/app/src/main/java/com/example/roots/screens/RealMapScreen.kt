@@ -3,6 +3,13 @@ package com.example.roots.screens
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.Drawable
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,18 +24,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.roots.R
 import com.example.roots.components.BottomNavBar
 import com.example.roots.ui.theme.RootsTheme
 import com.google.android.gms.location.*
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,10 +45,11 @@ fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // Estado para la ubicación del usuario
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
+    var hasCentered by remember { mutableStateOf(false) }
+    var compassEnabled by remember { mutableStateOf(false) }
+    var azimuth by remember { mutableStateOf(0f) }
 
-    // Configuración de la solicitud de ubicación
     val locationRequest = remember {
         LocationRequest.create().apply {
             interval = 10000
@@ -49,38 +58,68 @@ fun RealMapScreen(navController: NavController) {
         }
     }
 
-    // Lanzador para solicitar permisos
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Si se otorgan los permisos, obtener la ubicación
             getCurrentLocation(fusedLocationClient) { location ->
                 userLocation = LatLng(location.latitude, location.longitude)
             }
 
-            // Solicitar actualizaciones continuas de ubicación
             requestLocationUpdates(fusedLocationClient, locationRequest) { location ->
                 userLocation = LatLng(location.latitude, location.longitude)
             }
         }
     }
 
-    // Solicitar permisos al iniciar el componente
     LaunchedEffect(Unit) {
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    // Posición por defecto (Bogotá)
     val defaultPosition = LatLng(4.6483, -74.2479)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(userLocation ?: defaultPosition, 12f)
     }
 
-    // Mover la cámara cuando se actualiza la ubicación del usuario
     LaunchedEffect(userLocation) {
-        userLocation?.let { location ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(location, 15f)
+        if (userLocation != null && !hasCentered) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(userLocation!!, 15f)
+            hasCentered = true
+        }
+    }
+
+    // 🔄 SENSOR DE ROTACIÓN
+    val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    val rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
+    DisposableEffect(compassEnabled) {
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event?.sensor?.type == Sensor.TYPE_ROTATION_VECTOR) {
+                    val rotationMatrix = FloatArray(9)
+                    SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                    val orientation = FloatArray(3)
+                    SensorManager.getOrientation(rotationMatrix, orientation)
+                    val degrees = Math.toDegrees(orientation[0].toDouble()).toFloat()
+                    azimuth = (degrees + 360) % 360
+
+                    if (compassEnabled) {
+                        val current = cameraPositionState.position
+                        cameraPositionState.position =
+                            CameraPosition(current.target, current.zoom, current.tilt, azimuth)
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        if (compassEnabled) {
+            sensorManager.registerListener(listener, rotationVectorSensor, SensorManager.SENSOR_DELAY_UI)
+        }
+
+        onDispose {
+            sensorManager.unregisterListener(listener)
         }
     }
 
@@ -107,31 +146,31 @@ fun RealMapScreen(navController: NavController) {
             )
         }
     ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
-
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
                 uiSettings = MapUiSettings(
                     zoomControlsEnabled = true,
-                    myLocationButtonEnabled = false // Deshabilitamos el botón por defecto
+                    myLocationButtonEnabled = false
                 ),
                 properties = MapProperties(
                     isMyLocationEnabled = userLocation != null
                 )
             ) {
-                // Marcadores de propiedades
+                val markerIcon = remember {
+                    bitmapDescriptorFromVector(context, R.drawable.hojamapa)
+                }
+
                 markers.forEach { (position, title) ->
                     Marker(
                         state = MarkerState(position = position),
                         title = title,
-                        snippet = "Ver más..."
+                        snippet = "Ver más...",
+                        icon = markerIcon
                     )
                 }
 
-                // Marcador de la ubicación del usuario
                 userLocation?.let {
                     Marker(
                         state = MarkerState(position = it),
@@ -141,7 +180,22 @@ fun RealMapScreen(navController: NavController) {
                 }
             }
 
-            // Botón flotante para centrar en la ubicación del usuario
+            // 🧭 BOTÓN BRÚJULA
+            FloatingActionButton(
+                onClick = { compassEnabled = !compassEnabled },
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = 140.dp),
+                containerColor = Color.White
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.brujula),
+                    contentDescription = if (compassEnabled) "Desactivar brújula" else "Activar brújula",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            // 📍 BOTÓN CENTRAR
             FloatingActionButton(
                 onClick = {
                     userLocation?.let {
@@ -149,8 +203,8 @@ fun RealMapScreen(navController: NavController) {
                     }
                 },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 72.dp),
+                    .align(Alignment.BottomStart)
+                    .padding(start = 16.dp, bottom = 72.dp),
                 containerColor = Color.White
             ) {
                 Icon(Icons.Default.LocationOn, contentDescription = "Centrar en mi ubicación")
@@ -159,36 +213,50 @@ fun RealMapScreen(navController: NavController) {
     }
 }
 
-// Función para obtener la ubicación actual una vez
+// ✅ UBICACIÓN ACTUAL
 @SuppressLint("MissingPermission")
 private fun getCurrentLocation(
     fusedLocationClient: FusedLocationProviderClient,
     onLocationReceived: (Location) -> Unit
 ) {
-    fusedLocationClient.lastLocation
-        .addOnSuccessListener { location ->
-            location?.let(onLocationReceived)
-        }
+    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        location?.let(onLocationReceived)
+    }
 }
 
-// Función para solicitar actualizaciones continuas de ubicación
+// ✅ ACTUALIZACIONES CONTINUAS
 @SuppressLint("MissingPermission")
 private fun requestLocationUpdates(
     fusedLocationClient: FusedLocationProviderClient,
     locationRequest: LocationRequest,
     onLocationUpdate: (Location) -> Unit
 ) {
-    val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            locationResult.lastLocation?.let(onLocationUpdate)
+    val callback = object : LocationCallback() {
+        override fun onLocationResult(result: LocationResult) {
+            result.lastLocation?.let(onLocationUpdate)
         }
     }
+    fusedLocationClient.requestLocationUpdates(locationRequest, callback, Looper.getMainLooper())
+}
 
-    fusedLocationClient.requestLocationUpdates(
-        locationRequest,
-        locationCallback,
-        Looper.getMainLooper()
-    )
+// ✅ ÍCONO PERSONALIZADO PARA MARCADORES
+fun bitmapDescriptorFromVector(context: Context, drawableId: Int): BitmapDescriptor {
+    val drawable: Drawable = ContextCompat.getDrawable(context, drawableId)!!
+    val size = 64
+    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+
+    val paint = android.graphics.Paint().apply {
+        color = android.graphics.Color.parseColor("#a2f9fd")
+        isAntiAlias = true
+    }
+    canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
+
+    val padding = 8
+    drawable.setBounds(padding, padding, size - padding, size - padding)
+    drawable.draw(canvas)
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
 
 @Preview(showBackground = true)
