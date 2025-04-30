@@ -33,6 +33,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
+import com.example.roots.data.InmuebleRepository
 import com.example.roots.ui.theme.RootsTheme
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
@@ -49,7 +50,7 @@ fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
-    val inmuebles = remember { MockInmuebles.sample }
+    val inmuebles = InmuebleRepository.inmuebles
 
 
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -169,7 +170,7 @@ fun RealMapScreen(navController: NavController) {
                     bitmapDescriptorFromVector(context, R.drawable.hojamapa)
                 }
 
-                markers.forEach { (position, title) ->
+                //markers.forEach { (position, title) ->
                 // Marcadores de propiedades
                /* markers.forEach { (position, title) ->
                     Marker(

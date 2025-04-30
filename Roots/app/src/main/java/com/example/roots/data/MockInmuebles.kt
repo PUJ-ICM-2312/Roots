@@ -9,12 +9,15 @@ object MockInmuebles {
     val sample = listOf(
         Inmueble(
             id = 1,
-            direccion = "Cra 50 #20-30, Bogotá",
+            direccion = "Cra 50 #20-30",
             precio = 350_000_000f,
             estrato = 4,
             numBaños = 2,
+            numParqueaderos = 2,
             numHabitaciones = 3,
             metrosCuadrados = 85f,
+            barrio = "La Castellana",
+            ciudad = "Bogotá",
             descripcion = "Apartamento amplio con buena iluminación",
             fotos = listOf("https://.../img1.jpg"),
             tipoPublicacion = TipoPublicacion.Venta,
@@ -30,8 +33,11 @@ object MockInmuebles {
             precio = 450_000_000f,
             estrato = 5,
             numBaños = 3,
+            numParqueaderos = 1,
             numHabitaciones = 4,
             metrosCuadrados = 120f,
+            barrio = "El Country",
+            ciudad = "Bogotá",
             descripcion = "Penthouse con terraza",
             fotos = listOf("https://.../img2.jpg"),
             tipoPublicacion = TipoPublicacion.Venta,
@@ -43,12 +49,15 @@ object MockInmuebles {
         ),
         Inmueble(
             id                         = 3,
-            direccion                  = "Cra 7 #112-25, Usaquén, Bogotá",
+            direccion                  = "Cra 7 #112-25",
             precio                     = 480_000_000f,
             estrato                    = 5,
             numBaños                   = 2,
+            numParqueaderos = 1,
             numHabitaciones            = 3,
             metrosCuadrados            = 95f,
+            barrio = "Usaquén",
+            ciudad = "Bogotá",
             descripcion                = "Apartamento luminoso con balcón y vista al parque.",
             fotos                      = listOf(
                 "https://example.com/bogota3-1.jpg",
@@ -64,12 +73,15 @@ object MockInmuebles {
 
         Inmueble(
             id                         = 4,
-            direccion                  = "Cl 85 #20-50, Chapinero, Bogotá",
+            direccion                  = "Cl 85 #20-50",
             precio                     = 3_200_000f,
             estrato                    = 4,
             numBaños                   = 1,
+            numParqueaderos = 3,
             numHabitaciones            = 1,
             metrosCuadrados            = 42f,
+            barrio = "Chapinero",
+            ciudad = "Bogotá",
             descripcion                = "Apartaestudio moderno en zona gastronómica.",
             fotos                      = listOf(
                 "https://example.com/bogota4-1.jpg"
@@ -84,12 +96,15 @@ object MockInmuebles {
 
         Inmueble(
             id                         = 5,
-            direccion                  = "Av El Dorado #30-15, Teusaquillo, Bogotá",
+            direccion                  = "Av El Dorado #30-15",
             precio                     = 650_000_000f,
             estrato                    = 3,
             numBaños                   = 2,
+            numParqueaderos = 1,
             numHabitaciones            = 2,
             metrosCuadrados            = 78f,
+            barrio = "Teusaquillo",
+            ciudad = "Bogotá",
             descripcion                = "Cómodo dúplex cerca de la zona universitaria.",
             fotos                      = listOf(
                 "https://example.com/bogota5-1.jpg",
@@ -105,12 +120,15 @@ object MockInmuebles {
 
         Inmueble(
             id                         = 6,
-            direccion                  = "Cll 140 #10-20, Suba, Bogotá",
+            direccion                  = "Cll 140 #10-20",
             precio                     = 250_000_000f,
             estrato                    = 3,
             numBaños                   = 1,
+            numParqueaderos = 1,
             numHabitaciones            = 2,
             metrosCuadrados            = 60f,
+            barrio = "Suba",
+            ciudad = "Bogotá",
             descripcion                = "Local comercial en sector residencial, alto tránsito.",
             fotos                      = listOf(
                 "https://example.com/bogota6-1.jpg"
@@ -125,12 +143,15 @@ object MockInmuebles {
 
         Inmueble(
             id                         = 7,
-            direccion                  = "Av de Las Américas #68-40, Kennedy, Bogotá",
+            direccion                  = "Av de Las Américas #68-40",
             precio                     = 1_800_000f,
             estrato                    = 2,
             numBaños                   = 1,
+            numParqueaderos = 0,
             numHabitaciones            = 1,
             metrosCuadrados            = 35f,
+            barrio = "Kennedy",
+            ciudad = "Bogotá",
             descripcion                = "Habitación amoblada en casa familiar, ideal para estudiantes.",
             fotos                      = listOf(
                 "https://example.com/bogota7-1.jpg"
