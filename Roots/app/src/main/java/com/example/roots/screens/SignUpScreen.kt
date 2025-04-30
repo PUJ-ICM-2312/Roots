@@ -1,6 +1,5 @@
-package com.example.roots.screens
-
-import androidx.compose.foundation.background
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -8,21 +7,29 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import com.example.roots.R
-
+import com.example.roots.services.SecureStorage
+import com.example.roots.services.showBiometricPrompt
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun SignUpScreen() {
+    val context = LocalContext.current
+    val auth = remember { FirebaseAuth.getInstance() }
+
+    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -30,40 +37,100 @@ fun SignUpScreen() {
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // LOGO
         Image(
-            painter = painterResource(id = R.drawable.logo), // Cambia por tu logo real
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
             modifier = Modifier
                 .size(100.dp)
                 .padding(top = 16.dp)
         )
 
-        // CAMPOS DE TEXTO
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            SignUpField("Usuario")
-            SignUpField("Correo Electronico")
-            SignUpField("Contraseña")
-            SignUpField("Confirmar Contraseña")
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Usuario") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo electrónico") },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Email),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirmar contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Button(
-                onClick = { /* TODO */ },
+                onClick = {
+                    if (password != confirmPassword) {
+                        Toast.makeText(context, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    isLoading = true
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            isLoading = false
+                            if (task.isSuccessful) {
+                                Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_LONG).show()
+
+                                // Mostrar autenticación biométrica
+                                showBiometricPrompt(
+                                    context = context,
+                                    onAuthSuccess = {
+                                        // Guardar credenciales de forma segura
+                                        SecureStorage.saveCredentials(context, email, password)
+                                        Toast.makeText(context, "Huella registrada y login guardado", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onAuthError = {
+                                        Toast.makeText(context, "Error: $it", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            } else {
+                                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9AF5B4)),
                 shape = RoundedCornerShape(50),
-                modifier = Modifier.shadow(4.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(if (isLoading) "Registrando..." else "Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
 
-        // REGISTRO CON REDES SOCIALES
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
         ) {
             Text("O regístrate con")
 
@@ -71,16 +138,16 @@ fun SignUpScreen() {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(top = 8.dp)
             ) {
-                IconButton(onClick = { /* TODO */ }) {
+                IconButton(onClick = { /* Login con Google */ }) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_google), // 🔁 tu logo de Google
+                        painter = painterResource(id = R.drawable.ic_google),
                         contentDescription = "Google",
                         modifier = Modifier.size(32.dp)
                     )
                 }
-                IconButton(onClick = { /* TODO */ }) {
+                IconButton(onClick = { /* Login con Facebook */ }) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_facebook), // 🔁 tu logo de Facebook
+                        painter = painterResource(id = R.drawable.ic_facebook),
                         contentDescription = "Facebook",
                         modifier = Modifier.size(32.dp)
                     )
@@ -89,27 +156,3 @@ fun SignUpScreen() {
         }
     }
 }
-
-@Composable
-fun SignUpField(label: String) {
-    OutlinedTextField(
-        value = "",
-        onValueChange = {},
-        placeholder = {
-            Text(label, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        singleLine = true
-    )
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SignUpScreenPreview() {
-    SignUpScreen()
-}
-
-
