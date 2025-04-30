@@ -50,7 +50,7 @@ fun LoginScreen(navController: NavController) {
                 if (task.isSuccessful) {
                     Log.d("Login", "Login exitoso: ${auth.currentUser?.email}")
                     Toast.makeText(context, "Login exitoso", Toast.LENGTH_SHORT).show()
-                    // Aquí podrías navegar a otra pantalla
+                    navController.navigate(Screen.RealMap.route)
                 } else {
                     errorMessage = task.exception?.message ?: "Error desconocido"
                 }
@@ -139,7 +139,6 @@ fun LoginScreen(navController: NavController) {
                         val (savedEmail, savedPassword) = SecureStorage.getCredentials(context)
                         if (!savedEmail.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
                             handleLogin(savedEmail, savedPassword)
-                            navController.navigate(Screen.RealMap)
                         } else {
                             Toast.makeText(context, "No hay credenciales guardadas", Toast.LENGTH_SHORT).show()
                         }
