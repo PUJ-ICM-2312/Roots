@@ -1,4 +1,5 @@
 package com.example.roots.screens
+
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -113,23 +114,24 @@ fun SignUpScreen(navController: NavController) {
                                 showBiometricPrompt(
                                     context = context,
                                     onAuthSuccess = {
-                                        // Guardar credenciales de forma segura
                                         SecureStorage.saveCredentials(context, email, password)
                                         Toast.makeText(context, "Huella registrada y login guardado", Toast.LENGTH_SHORT).show()
+                                        navController.navigate(Screen.Login.route)
                                     },
                                     onAuthError = {
-                                        Toast.makeText(context, "Error: $it", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Registro exitoso pero falló la huella", Toast.LENGTH_SHORT).show()
+                                        navController.navigate(Screen.Login.route)
                                     }
                                 )
                             } else {
-                                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                                val errorMsg = task.exception?.message ?: "Error desconocido"
+                                Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
                             }
                         }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9AF5B4)),
                 shape = RoundedCornerShape(50),
                 modifier = Modifier.fillMaxWidth()
-
             ) {
                 Text(if (isLoading) "Registrando..." else "Confirmar", color = Color.Black, fontWeight = FontWeight.Bold)
             }
