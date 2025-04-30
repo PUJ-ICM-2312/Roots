@@ -7,6 +7,8 @@ import android.location.Location
 import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -26,6 +28,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.example.roots.screens.Screen
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,11 +36,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-
-    // Estado para la ubicación del usuario
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
 
-    // Configuración de la solicitud de ubicación
     val locationRequest = remember {
         LocationRequest.create().apply {
             interval = 10000
@@ -46,38 +46,31 @@ fun RealMapScreen(navController: NavController) {
         }
     }
 
-    // Lanzador para solicitar permisos
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Si se otorgan los permisos, obtener la ubicación
             getCurrentLocation(fusedLocationClient) { location ->
                 userLocation = LatLng(location.latitude, location.longitude)
             }
-
-            // Solicitar actualizaciones continuas de ubicación
             requestLocationUpdates(fusedLocationClient, locationRequest) { location ->
                 userLocation = LatLng(location.latitude, location.longitude)
             }
         }
     }
 
-    // Solicitar permisos al iniciar el componente
     LaunchedEffect(Unit) {
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    // Posición por defecto (Bogotá)
     val defaultPosition = LatLng(4.6483, -74.2479)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(userLocation ?: defaultPosition, 12f)
     }
 
-    // Mover la cámara cuando se actualiza la ubicación del usuario
     LaunchedEffect(userLocation) {
-        userLocation?.let { location ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(location, 15f)
+        userLocation?.let {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
         }
     }
 
@@ -90,45 +83,56 @@ fun RealMapScreen(navController: NavController) {
         LatLng(4.6245, -74.0640) to "Habitación económica cerca de transporte"
     )
 
+    var selectedMarker by remember { mutableStateOf<Pair<LatLng, String>?>(null) }
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                        Text(" PUJ, Apartamento", fontWeight = FontWeight.Bold)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
-    ) { padding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(padding)) {
+            Surface(
+                shadowElevation = 4.dp,
+                color = Color.White
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var searchQuery by remember { mutableStateOf("") }
 
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+                        placeholder = { Text("Buscar ubicación o propiedad") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                    )
+                }
+            }
+        }
+
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
-                uiSettings = MapUiSettings(
-                    zoomControlsEnabled = true,
-                    myLocationButtonEnabled = false // Deshabilitamos el botón por defecto
-                ),
-                properties = MapProperties(
-                    isMyLocationEnabled = userLocation != null
-                )
+                uiSettings = MapUiSettings(zoomControlsEnabled = true),
+                properties = MapProperties(isMyLocationEnabled = userLocation != null)
             ) {
-                // Marcadores de propiedades
                 markers.forEach { (position, title) ->
                     Marker(
                         state = MarkerState(position = position),
                         title = title,
-                        snippet = "Ver más..."
+                        onClick = {
+                            selectedMarker = position to title
+                            true
+                        }
                     )
                 }
 
-                // Marcador de la ubicación del usuario
                 userLocation?.let {
                     Marker(
                         state = MarkerState(position = it),
@@ -138,7 +142,22 @@ fun RealMapScreen(navController: NavController) {
                 }
             }
 
-            // Botón flotante para centrar en la ubicación del usuario
+            selectedMarker?.let { (position, title) ->
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 100.dp)
+                        .background(Color.White)
+                        .padding(12.dp)
+                        .clickable {
+                            navController.navigate(Screen.PropertyScrollMode.route)
+                        }
+                ) {
+                    Text(text = title, fontWeight = FontWeight.Bold)
+                    Text(text = "Ver más...", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+
             FloatingActionButton(
                 onClick = {
                     userLocation?.let {
@@ -156,7 +175,6 @@ fun RealMapScreen(navController: NavController) {
     }
 }
 
-// Función para obtener la ubicación actual una vez
 @SuppressLint("MissingPermission")
 private fun getCurrentLocation(
     fusedLocationClient: FusedLocationProviderClient,
@@ -168,7 +186,6 @@ private fun getCurrentLocation(
         }
 }
 
-// Función para solicitar actualizaciones continuas de ubicación
 @SuppressLint("MissingPermission")
 private fun requestLocationUpdates(
     fusedLocationClient: FusedLocationProviderClient,

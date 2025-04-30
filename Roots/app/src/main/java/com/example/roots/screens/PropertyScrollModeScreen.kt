@@ -31,25 +31,26 @@ import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
+import com.example.roots.components.BottomNavBar
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PropertyScrollModeScreen(navController: NavController) {
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
-    ) {
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
         ) {
             ImageCarousel()
             PropertyHeaderInfo()
             PropertyDescription()
             PropertyLocation()
-            PropertyMap()
-            ContactButton()
-            Spacer(modifier = Modifier.height(80.dp)) // Para dar espacio al navbar
+            PropertyMap(navController)
+            ContactButton(navController)
         }
     }
 }
@@ -66,7 +67,7 @@ fun ImageCarousel() {
     )
 
     val pagerState = rememberPagerState(
-        pageCount = { images.size } // ✅ lambda, no valor directo
+        pageCount = { images.size }
     )
 
     HorizontalPager(
@@ -87,7 +88,6 @@ fun ImageCarousel() {
         )
     }
 }
-
 
 @Composable
 fun PropertyHeaderInfo() {
@@ -114,13 +114,15 @@ fun PropertyHeaderInfo() {
 fun PropertyDescription() {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Descripción", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text("""
+        Text(
+            """
             Vendo El Chico ALEGÓ, Área de 110 m2, muy bien aprovechados,
             8 piso exterior, muy iluminado con una vista envidiable, 15 años de construido,
             3 habitaciones, 3 baños, Estudio, Pisos laminados madera,
             Sala y comedor, Ventanales piso techo, Balcón, Chimenea a gas,
             Cocina abierta con barra, Zona de lavandería ventilada, 2 parqueaderos.
-        """.trimIndent())
+        """.trimIndent()
+        )
     }
 }
 
@@ -136,12 +138,13 @@ fun PropertyLocation() {
 }
 
 @Composable
-fun PropertyMap() {
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(250.dp)
-        .padding(16.dp)) {
-
+fun PropertyMap(navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(16.dp)
+    ) {
         Image(
             painter = painterResource(id = R.drawable.fakemap),
             contentDescription = "Mapa",
@@ -150,7 +153,9 @@ fun PropertyMap() {
         )
 
         IconButton(
-            onClick = { /* TODO: Mostrar ruta */ },
+            onClick = {
+                navController.navigate("map_route")
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(12.dp)
@@ -163,7 +168,7 @@ fun PropertyMap() {
 }
 
 @Composable
-fun ContactButton() {
+fun ContactButton(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,14 +176,12 @@ fun ContactButton() {
         contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = { /* TODO: Contactar al dueño */ },
+            onClick = { navController.navigate(Screen.Chat.route) },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFD5FDE5),
                 contentColor = Color.Black
             ),
             modifier = Modifier.fillMaxWidth()
-
-
         ) {
             Icon(Icons.Default.ChatBubble, contentDescription = "Contactar")
             Spacer(modifier = Modifier.width(8.dp))
@@ -186,6 +189,7 @@ fun ContactButton() {
         }
     }
 }
+
 
 @Composable
 fun PropertyFeature(icon: ImageVector, label: String) {

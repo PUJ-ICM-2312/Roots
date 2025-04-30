@@ -101,6 +101,8 @@ fun NavigationStack() {
                 composable(Screen.MapPreview.route) { MapScreenPreview(navController) }
                 composable(Screen.RealMap.route) { RealMapScreen(navController) }
                 composable(Screen.Favorites.route) { FavoritesScreen(navController)}
+                composable(Screen.MapRoute.route) { MapRouteScreen(navController) }
+
             }
         }
     }
@@ -128,4 +130,5 @@ sealed class Screen(val route: String) {
     object MapPreview : Screen("map_preview")
     object RealMap : Screen("real_map")
     object Favorites : Screen("favorites")
+    object MapRoute : Screen("map_route")
 }
