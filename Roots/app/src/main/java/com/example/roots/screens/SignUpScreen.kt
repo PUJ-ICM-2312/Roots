@@ -3,6 +3,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -17,14 +18,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.services.SecureStorage
 import com.example.roots.services.showBiometricPrompt
+import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = remember { FirebaseAuth.getInstance() }
     var username by remember { mutableStateOf("") }

@@ -1,7 +1,6 @@
 package com.example.roots.screens
 
 import LoginScreen
-import SignUpScreen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
