@@ -13,15 +13,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.components.BottomNavBar
+import com.example.roots.data.UsuarioRepository
+import com.example.roots.model.Usuario
+import coil.compose.AsyncImage
+import com.example.roots.ui.theme.RootsTheme
+import java.io.File
+
 
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val user = UsuarioRepository.usuario
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) {
@@ -50,21 +61,35 @@ fun SettingsScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Box(
-                modifier = Modifier
-                    .size(110.dp),
+                modifier = Modifier.size(110.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray)
-                )
+                if (user.fotoPath.isNotEmpty()) {
+                    AsyncImage(
+                        model = File(user.fotoPath),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    // placeholder
+                    Box(
+                        Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .background(Color.LightGray)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "${user.nombres} ${user.apellidos}",
+                fontSize = 16.sp
+            )
 
-            Text(text = "Diego Cortés", fontSize = 16.sp)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -97,5 +122,13 @@ fun SettingsButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: 
         Icon(icon, contentDescription = text, tint = Color.Black)
         Spacer(modifier = Modifier.width(12.dp))
         Text(text = text, color = Color.Black)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewSettings() {
+    RootsTheme {
+       SettingsScreen(navController = rememberNavController())
     }
 }
