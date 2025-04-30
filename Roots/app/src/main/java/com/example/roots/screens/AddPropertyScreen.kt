@@ -23,11 +23,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.example.roots.R
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.roots.model.TipoInmueble
+import com.example.roots.model.TipoPublicacion
+import com.example.roots.ui.theme.RootsTheme
 
 
 @Composable
@@ -40,8 +45,8 @@ fun AddPropertyScreen(navController: NavController) {
     var metros by remember { mutableStateOf("") }
     var admin by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
-    var tipoPublicacion by remember { mutableStateOf("Seleccionar") }
-    var tipoInmueble by remember { mutableStateOf("Seleccionar") }
+    var tipoPublicacion by remember { mutableStateOf(TipoPublicacion.Venta) }
+    var tipoInmueble     by remember { mutableStateOf(TipoInmueble.Apartamento) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
     val context = LocalContext.current
@@ -52,8 +57,8 @@ fun AddPropertyScreen(navController: NavController) {
     }
 
     val estratos = (1..6).map { it.toString() }
-    val tiposPublicacion = listOf("Venta", "Arriendo", "Permuta", "Temporal")
-    val tiposInmueble = listOf("Apartamento", "Casa", "Apartaestudio", "Oficina", "Lote", "Local")
+    val tiposPublicacionStrings = TipoPublicacion.values().map { it.name }
+    val tiposInmuebleStrings    = TipoInmueble.values().map    { it.name }
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
@@ -94,18 +99,32 @@ fun AddPropertyScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(12.dp))
 
             NumberField("Precio", precio) { precio = it }
-            NumberField("Estrato", estrato, estratos) { estrato = it }
+            DropDownSelector(
+                label    = "Estrato",
+                selected = estrato,
+                options  = estratos
+            ) { nuevo ->
+                estrato = nuevo
+            }
             NumberField("Baños", numBanos) { numBanos = it }
             NumberField("Habitaciones", numHabitaciones) { numHabitaciones = it }
             NumberField("Metros cuadrados", metros) { metros = it }
             NumberField("Administración mensual", admin) { admin = it }
 
-            DropDownSelector("Tipo de publicación", tipoPublicacion, tiposPublicacion) {
-                tipoPublicacion = it
+            DropDownSelector(
+                label    = "Tipo de publicación",
+                selected = tipoPublicacion.name,
+                options  = tiposPublicacionStrings
+            ) { seleccionado ->
+                tipoPublicacion = TipoPublicacion.valueOf(seleccionado)
             }
-
-            DropDownSelector("Tipo de inmueble", tipoInmueble, tiposInmueble) {
-                tipoInmueble = it
+            Spacer(modifier = Modifier.height(8.dp))
+            DropDownSelector(
+                label    = "Tipo de inmueble",
+                selected = tipoInmueble.name,
+                options  = tiposInmuebleStrings
+            ) { seleccionado ->
+                tipoInmueble = TipoInmueble.valueOf(seleccionado)
             }
 
             OutlinedTextField(
@@ -173,27 +192,83 @@ fun NumberField(label: String, value: String, onValueChange: (String) -> Unit) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NumberField(label: String, selected: String, options: List<String>, onSelect: (String) -> Unit) {
-    DropDownSelector(label, selected, options, onSelect)
+fun DropDownSelector(
+    label: String,
+    selected: String,
+    options: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(Modifier
+        .fillMaxWidth()
+        .padding(vertical = 6.dp)
+    ) {
+        OutlinedTextField(
+            value        = selected,
+            onValueChange= { /*no editable*/ },
+            readOnly     = true,
+            label        = { Text(label) },
+            modifier     = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                }
+            }
+        )
+        DropdownMenu(
+            expanded        = expanded,
+            onDismissRequest= { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text    = { Text(option) },
+                    onClick = {
+                        onSelect(option)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
+
+/*@Composable
+fun NumberField(label: String, selected: String, options: List<String>, onSelect: (String) -> Unit) {
+    DropDownSelector(label, selected, options, onSelect)
+}*/
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownSelector(label: String, selected: String, options: List<String>, onSelect: (String) -> Unit) {
+fun <T: Enum<T>> EnumDropDownSelector(
+    label: String,
+    selected: T,
+    options: List<T>,
+    onSelect: (T) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier
         .fillMaxWidth()
-        .padding(vertical = 6.dp)) {
+        .padding(vertical = 6.dp)
+    ) {
         OutlinedTextField(
-            value = selected,
+            value = selected.name,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                IconButton(
+                    onClick = { expanded = !expanded }           // ← aquí, parámetro nombrado
+                ) {
+                    Icon(
+                        imageVector   = Icons.Default.ArrowDropDown,
+                        contentDescription = null
+                    )
                 }
             }
         )
@@ -204,7 +279,7 @@ fun DropDownSelector(label: String, selected: String, options: List<String>, onS
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option.name) },
                     onClick = {
                         onSelect(option)
                         expanded = false
@@ -214,5 +289,14 @@ fun DropDownSelector(label: String, selected: String, options: List<String>, onS
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewAddProperty() {
+    RootsTheme {
+        AddPropertyScreen(navController = rememberNavController())
+    }
+}
+
 
 
