@@ -139,7 +139,7 @@ fun LoginScreen(navController: NavController) {
                         val (savedEmail, savedPassword) = SecureStorage.getCredentials(context)
                         if (!savedEmail.isNullOrEmpty() && !savedPassword.isNullOrEmpty()) {
                             handleLogin(savedEmail, savedPassword)
-                            navController.navigate(Screen.FakeMap.route)
+                            navController.navigate(Screen.RealMap)
                         } else {
                             Toast.makeText(context, "No hay credenciales guardadas", Toast.LENGTH_SHORT).show()
                         }
