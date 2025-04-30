@@ -73,8 +73,9 @@ object MockInmuebles {
             ciudad = "Bogotá",
             descripcion                = "Apartamento luminoso con balcón y vista al parque.",
             fotos                      = listOf(
-                "https://example.com/bogota3-1.jpg",
-                "https://example.com/bogota3-2.jpg"
+                R.drawable.inmueble2,
+                R.drawable.inmueble6,
+                R.drawable.inmueble1
             ),
             tipoPublicacion            = TipoPublicacion.Venta,
             tipoInmueble               = TipoInmueble.Apartamento,

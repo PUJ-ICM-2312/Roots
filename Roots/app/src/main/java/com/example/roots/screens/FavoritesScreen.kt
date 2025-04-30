@@ -15,9 +15,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
 import com.example.roots.components.BottomNavBar
+import com.example.roots.data.InmuebleRepository
+import com.example.roots.screens.PropertyGrid
+
 
 @Composable
 fun FavoritesScreen(navController: NavController) {
+    val favoritos = InmuebleRepository.inmuebles
+        .filter { it.numFavoritos > 0 }
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { padding ->
@@ -26,6 +31,7 @@ fun FavoritesScreen(navController: NavController) {
                 .padding(padding)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
             Spacer(Modifier.height(16.dp))
 
@@ -38,8 +44,8 @@ fun FavoritesScreen(navController: NavController) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Reutilizamos la grilla de ejemplo
-            PropertyGrid()
+            // Reutilizamos la grilla de MyProperties
+            PropertyGrid(properties = favoritos, navController = navController)
 
             Spacer(Modifier.height(24.dp))
         }
