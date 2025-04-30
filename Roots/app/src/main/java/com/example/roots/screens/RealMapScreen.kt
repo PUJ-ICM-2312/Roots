@@ -41,6 +41,18 @@ import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.example.roots.data.MockInmuebles
 import com.example.roots.model.Inmueble
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.model.AutocompletePrediction
+import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.PlacesClient
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import android.util.Log
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.CameraPosition
 
 
 @SuppressLint("MissingPermission")
@@ -143,16 +155,17 @@ fun RealMapScreen(navController: NavController) {
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                        Text(" PUJ, Apartamento", fontWeight = FontWeight.Bold)
-                    }
+            SearchBar(
+                onPlaceSelected = { latLng ->
+                    cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 15f)
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                onNavigateToFilter = {
+                    navController.navigate(Screen.Filter.route)
+                }
             )
+
         }
+
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             GoogleMap(
@@ -288,5 +301,105 @@ fun bitmapDescriptorFromVector(context: Context, drawableId: Int): BitmapDescrip
 fun PreviewMap() {
     RootsTheme {
         RealMapScreen(navController = rememberNavController())
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SearchBar(
+    onPlaceSelected: (LatLng) -> Unit,
+    onNavigateToFilter: () -> Unit
+) {
+    val context = LocalContext.current
+    val placesClient = remember { Places.createClient(context) }
+
+    var query by remember { mutableStateOf("") }
+    var predictions by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded && predictions.isNotEmpty(),
+        onExpandedChange = { }, // Evita que se cierre solo
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        TextField(
+            value = query,
+            onValueChange = {
+                query = it
+                expanded = true
+            },
+            label = { Text("Buscar ubicación") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+            trailingIcon = {
+                IconButton(onClick = {
+                    onNavigateToFilter()
+                }) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.filtro), // Asegúrate de tener este ícono
+                        contentDescription = "Ir a filtros"
+                    )
+                }
+            },
+            singleLine = true,
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded && predictions.isNotEmpty(),
+            onDismissRequest = { expanded = false }
+        ) {
+            predictions.forEach { prediction ->
+                DropdownMenuItem(
+                    text = { Text(prediction.getFullText(null).toString()) },
+                    onClick = {
+                        expanded = false
+                        query = prediction.getFullText(null).toString()
+
+                        val placeId = prediction.placeId
+                        val placeRequest = FetchPlaceRequest.builder(
+                            placeId, listOf(Place.Field.LAT_LNG)
+                        ).build()
+
+                        placesClient.fetchPlace(placeRequest)
+                            .addOnSuccessListener { response ->
+                                response.place.latLng?.let { latLng ->
+                                    onPlaceSelected(latLng)
+                                }
+                            }
+
+                        focusManager.clearFocus()
+                        focusRequester.requestFocus()
+                    }
+                )
+            }
+        }
+    }
+
+    LaunchedEffect(query) {
+        if (query.length >= 3) {
+            val request = FindAutocompletePredictionsRequest.builder()
+                .setQuery(query)
+                .setCountries(listOf("CO")) // Opcional: limitar a Colombia
+                .build()
+
+            placesClient.findAutocompletePredictions(request)
+                .addOnSuccessListener { response ->
+                    predictions = response.autocompletePredictions
+                }
+                .addOnFailureListener {
+                    Log.e("Places", "Autocomplete error", it)
+                    predictions = emptyList()
+                }
+        } else {
+            predictions = emptyList()
+        }
     }
 }
