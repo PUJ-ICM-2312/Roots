@@ -39,6 +39,107 @@ object MockInmuebles {
             mensualidadAdministracion = 250_000f,
             latitud = 4.679012,
             longitud = -74.073456
+        ),
+        Inmueble(
+            id                         = 3,
+            direccion                  = "Cra 7 #112-25, Usaquén, Bogotá",
+            precio                     = 480_000_000f,
+            estrato                    = 5,
+            numBaños                   = 2,
+            numHabitaciones            = 3,
+            metrosCuadrados            = 95f,
+            descripcion                = "Apartamento luminoso con balcón y vista al parque.",
+            fotos                      = listOf(
+                "https://example.com/bogota3-1.jpg",
+                "https://example.com/bogota3-2.jpg"
+            ),
+            tipoPublicacion            = TipoPublicacion.Venta,
+            tipoInmueble               = TipoInmueble.Apartamento,
+            numFavoritos               = 4,
+            mensualidadAdministracion  = 220_000f,
+            latitud                    = 4.7195,
+            longitud                   = -74.0383
+        ),
+
+        Inmueble(
+            id                         = 4,
+            direccion                  = "Cl 85 #20-50, Chapinero, Bogotá",
+            precio                     = 3_200_000f,
+            estrato                    = 4,
+            numBaños                   = 1,
+            numHabitaciones            = 1,
+            metrosCuadrados            = 42f,
+            descripcion                = "Apartaestudio moderno en zona gastronómica.",
+            fotos                      = listOf(
+                "https://example.com/bogota4-1.jpg"
+            ),
+            tipoPublicacion            = TipoPublicacion.Arriendo,
+            tipoInmueble               = TipoInmueble.Apartaestudio,
+            numFavoritos               = 7,
+            mensualidadAdministracion  = 180_000f,
+            latitud                    = 4.6644,
+            longitud                   = -74.0554
+        ),
+
+        Inmueble(
+            id                         = 5,
+            direccion                  = "Av El Dorado #30-15, Teusaquillo, Bogotá",
+            precio                     = 650_000_000f,
+            estrato                    = 3,
+            numBaños                   = 2,
+            numHabitaciones            = 2,
+            metrosCuadrados            = 78f,
+            descripcion                = "Cómodo dúplex cerca de la zona universitaria.",
+            fotos                      = listOf(
+                "https://example.com/bogota5-1.jpg",
+                "https://example.com/bogota5-2.jpg"
+            ),
+            tipoPublicacion            = TipoPublicacion.Venta,
+            tipoInmueble               = TipoInmueble.Casa,
+            numFavoritos               = 2,
+            mensualidadAdministracion  = 0f,
+            latitud                    = 4.6374,
+            longitud                   = -74.0895
+        ),
+
+        Inmueble(
+            id                         = 6,
+            direccion                  = "Cll 140 #10-20, Suba, Bogotá",
+            precio                     = 250_000_000f,
+            estrato                    = 3,
+            numBaños                   = 1,
+            numHabitaciones            = 2,
+            metrosCuadrados            = 60f,
+            descripcion                = "Local comercial en sector residencial, alto tránsito.",
+            fotos                      = listOf(
+                "https://example.com/bogota6-1.jpg"
+            ),
+            tipoPublicacion            = TipoPublicacion.Venta,
+            tipoInmueble               = TipoInmueble.LocalComercial,
+            numFavoritos               = 5,
+            mensualidadAdministracion  = 150_000f,
+            latitud                    = 4.7450,
+            longitud                   = -74.0931
+        ),
+
+        Inmueble(
+            id                         = 7,
+            direccion                  = "Av de Las Américas #68-40, Kennedy, Bogotá",
+            precio                     = 1_800_000f,
+            estrato                    = 2,
+            numBaños                   = 1,
+            numHabitaciones            = 1,
+            metrosCuadrados            = 35f,
+            descripcion                = "Habitación amoblada en casa familiar, ideal para estudiantes.",
+            fotos                      = listOf(
+                "https://example.com/bogota7-1.jpg"
+            ),
+            tipoPublicacion            = TipoPublicacion.Arriendo,
+            tipoInmueble               = TipoInmueble.Apartamento,
+            numFavoritos               = 10,
+            mensualidadAdministracion  = 100_000f,
+            latitud                    = 4.6147,
+            longitud                   = -74.1450
         )
         // … más inmuebles de prueba
     )

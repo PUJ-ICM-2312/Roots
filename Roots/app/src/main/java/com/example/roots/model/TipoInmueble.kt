@@ -5,7 +5,8 @@ enum class TipoInmueble(val label: String) {
     Casa("Casa"),
     Penthouse("Penthouse"),
     LocalComercial("Local Comercial"),
-    Lote("Lote")
+    Lote("Lote"),
+    Apartaestudio("Apartaestudio")
 }
 
 
