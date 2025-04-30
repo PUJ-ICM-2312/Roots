@@ -38,6 +38,8 @@ import coil.compose.AsyncImage
 import com.example.roots.model.Inmueble
 import com.example.roots.data.InmuebleRepository
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -137,6 +139,18 @@ fun PropertyHeaderInfo(inmueble: Inmueble) {
         Text(inmueble.ciudad + ", " + inmueble.barrio, fontWeight = FontWeight.Bold, fontSize = 22.sp)
 
         Spacer(modifier = Modifier.height(10.dp))
+
+        val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val fechaTexto = sdf.format(Date(inmueble.fechaPublicacion))
+        Text("Publicado el $fechaTexto")
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text("Antigüedad: ")
+        Text("$inmueble.antiguedad años")
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         Text(
             text = "$ $formattedPrice",
             fontWeight = FontWeight.Bold,

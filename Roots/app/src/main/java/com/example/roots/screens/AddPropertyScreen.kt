@@ -63,6 +63,8 @@ fun AddPropertyScreen(navController: NavController) {
     var barrio by remember { mutableStateOf("") }
     var ciudad by remember { mutableStateOf("") }
     var admin by remember { mutableStateOf("") }
+    var antiguedad by remember { mutableStateOf("")}
+    var fechaPublicacion by remember { mutableStateOf("")}
     var descripcion by remember { mutableStateOf("") }
     var tipoPublicacion by remember { mutableStateOf(TipoPublicacion.Venta) }
     var tipoInmueble     by remember { mutableStateOf(TipoInmueble.Apartamento) }
@@ -191,6 +193,10 @@ fun AddPropertyScreen(navController: NavController) {
             NumberField("Metros cuadrados", metros) { metros = it }
             NumberField("Parqueaderos", numParqueaderos) { numParqueaderos = it }
 
+
+            NumberField("Antiguedad en años", antiguedad) { antiguedad = it }
+
+
             NumberField("Administración mensual", admin) { admin = it }
 
             DropDownSelector(
@@ -303,6 +309,8 @@ fun AddPropertyScreen(navController: NavController) {
                             tipoInmueble               = tipoInmueble,
                             numFavoritos               = 0,
                             mensualidadAdministracion  = admin.toFloatOrNull()?:0f,
+                            antiguedad                 = antiguedad.toIntOrNull()?:0,
+                            fechaPublicacion           = System.currentTimeMillis(),
                             latitud                    = lat,
                             longitud                   = lng
                         )

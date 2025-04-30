@@ -4,6 +4,7 @@ import com.example.roots.model.Inmueble
 import com.example.roots.model.TipoInmueble
 import com.example.roots.model.TipoPublicacion
 import com.example.roots.R
+import java.time.LocalDateTime
 
 object MockInmuebles {
     val sample = listOf(
@@ -24,6 +25,8 @@ object MockInmuebles {
             tipoInmueble = TipoInmueble.Apartamento,
             numFavoritos = 0,
             mensualidadAdministracion = 150_000f,
+            antiguedad = 8,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud = 4.654321,
             longitud = -74.056789
         ),
@@ -44,6 +47,8 @@ object MockInmuebles {
             tipoInmueble = TipoInmueble.Penthouse,
             numFavoritos = 0,
             mensualidadAdministracion = 250_000f,
+            antiguedad = 18,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud = 4.679012,
             longitud = -74.073456
         ),
@@ -67,6 +72,8 @@ object MockInmuebles {
             tipoInmueble               = TipoInmueble.Apartamento,
             numFavoritos               = 4,
             mensualidadAdministracion  = 220_000f,
+            antiguedad = 1,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud                    = 4.7195,
             longitud                   = -74.0383
         ),
@@ -90,6 +97,8 @@ object MockInmuebles {
             tipoInmueble               = TipoInmueble.Apartaestudio,
             numFavoritos               = 7,
             mensualidadAdministracion  = 180_000f,
+            antiguedad = 28,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud                    = 4.6644,
             longitud                   = -74.0554
         ),
@@ -114,6 +123,8 @@ object MockInmuebles {
             tipoInmueble               = TipoInmueble.Casa,
             numFavoritos               = 2,
             mensualidadAdministracion  = 0f,
+            antiguedad = 8,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud                    = 4.6374,
             longitud                   = -74.0895
         ),
@@ -137,6 +148,8 @@ object MockInmuebles {
             tipoInmueble               = TipoInmueble.LocalComercial,
             numFavoritos               = 5,
             mensualidadAdministracion  = 150_000f,
+            antiguedad = 20,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud                    = 4.7450,
             longitud                   = -74.0931
         ),
@@ -160,6 +173,8 @@ object MockInmuebles {
             tipoInmueble               = TipoInmueble.Apartamento,
             numFavoritos               = 10,
             mensualidadAdministracion  = 100_000f,
+            antiguedad = 15,
+            fechaPublicacion = System.currentTimeMillis(),
             latitud                    = 4.6147,
             longitud                   = -74.1450
         )
