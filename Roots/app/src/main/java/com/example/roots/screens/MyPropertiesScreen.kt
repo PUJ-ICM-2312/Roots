@@ -29,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.google.firebase.auth.FirebaseAuth
 
-
 @Composable
 fun MyPropertiesScreen(navController: NavController) {
     val properties = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
