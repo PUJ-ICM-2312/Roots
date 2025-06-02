@@ -14,17 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -34,14 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roots.R
 import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.roots.model.`Inmueble.kt`
-import com.example.roots.data.InmuebleRepository
+import com.example.roots.model.Inmueble
+import com.example.roots.repository.InmuebleRepository
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -60,8 +52,6 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -69,11 +59,9 @@ fun PropertyScrollModeScreen(
     navController: NavController,
     propertyId: Int
 ) {
-    // 2) Recupera el inmueble del repositorio
     val inmueble = remember(propertyId) {
-        InmuebleRepository.`inmueble.kts`.firstOrNull { it.id == propertyId }
+        InmuebleRepository.inmuebles.firstOrNull { it.id == propertyId }
     } ?: run {
-        // Si no existe, vuelve atrás o muestra un placeholder
         LaunchedEffect(Unit) { navController.popBackStack() }
         return
     }
@@ -92,23 +80,14 @@ fun PropertyScrollModeScreen(
             PropertyLocation(inmueble)
             PropertyMap(inmueble)
             ContactButton(inmueble)
-            Spacer(modifier = Modifier.height(80.dp)) // Para dar espacio al navbar
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
 @Composable
-fun ImageCarousel(`inmueble.kt`: `Inmueble.kt`) {
-    /*val images = listOf(
-        R.drawable.inmueble1,
-        R.drawable.inmueble2,
-        R.drawable.inmueble3,
-        R.drawable.inmueble4,
-        R.drawable.inmueble5,
-        R.drawable.inmueble6
-    )*/
-
-    val pagerState = rememberPagerState(pageCount = { `inmueble.kt`.fotos.size })
+fun ImageCarousel(inmueble: Inmueble) {
+    val pagerState = rememberPagerState(pageCount = { inmueble.fotos.size })
 
     HorizontalPager(
         state = pagerState,
@@ -118,122 +97,100 @@ fun ImageCarousel(`inmueble.kt`: `Inmueble.kt`) {
             .height(220.dp)
             .padding(8.dp)
     ) { page ->
-        when (val item = `inmueble.kt`.fotos[page]) {
-            is Int    -> Image(
-                painter            = painterResource(id = item),
-                contentDescription = null,
-                modifier           = Modifier
+        val item = inmueble.fotos[page]
+        when {
+            item is Int -> {
+                Image(
+                    painter = painterResource(id = item),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            item is String -> {
+                AsyncImage(
+                    model = item,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            else -> {
+                Spacer(modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale       = ContentScale.Crop
-            )
-            is String -> AsyncImage(
-                model              = item,
-                contentDescription = null,
-                modifier           = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale       = ContentScale.Crop
-            )
-            else      -> Spacer(modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp))  // fallback
+                    .height(220.dp))
+            }
         }
     }
+
 }
 
-
 @Composable
-fun PropertyHeaderInfo(`inmueble.kt`: `Inmueble.kt`) {
-    val formattedPrice = remember(`inmueble.kt`.precio) {
-        NumberFormat.getNumberInstance(Locale.US)
-            .format(`inmueble.kt`.precio.toLong())
+fun PropertyHeaderInfo(inmueble: Inmueble) {
+    val formattedPrice = remember(inmueble.precio) {
+        NumberFormat.getNumberInstance(Locale.US).format(inmueble.precio.toLong())
     }
-    val formattedPriceAdmin = remember(`inmueble.kt`.mensualidadAdministracion) {
-        NumberFormat.getNumberInstance(Locale.US)
-            .format(`inmueble.kt`.mensualidadAdministracion.toLong())
+    val formattedPriceAdmin = remember(inmueble.mensualidadAdministracion) {
+        NumberFormat.getNumberInstance(Locale.US).format(inmueble.mensualidadAdministracion.toLong())
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
-       /* Text("Apartamento en Venta", fontWeight = FontWeight.Bold, fontSize = 22.sp)
-        Text("$990.000.000", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF1A1A1A))
-        Text("+ $757.000 administración", color = Color.Gray)*/
-
-        Text(`inmueble.kt`.direccion, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+        Text(inmueble.direccion, fontWeight = FontWeight.Bold, fontSize = 22.sp)
         Spacer(modifier = Modifier.height(5.dp))
-        Text(`inmueble.kt`.ciudad + ", " + `inmueble.kt`.barrio, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-
+        Text("${inmueble.ciudad}, ${inmueble.barrio}", fontWeight = FontWeight.Bold, fontSize = 22.sp)
         Spacer(modifier = Modifier.height(10.dp))
-
         val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-        val fechaTexto = sdf.format(Date(`inmueble.kt`.fechaPublicacion))
+        val fechaTexto = sdf.format(Date(inmueble.fechaPublicacion))
         Text("Publicado el $fechaTexto")
-
         Spacer(modifier = Modifier.height(10.dp))
-
-        val anti = `inmueble.kt`.antiguedad
-        Text("Antigüedad: ")
-        if (anti <= 1)
-            Text("$anti año")
-        else
-            Text("$anti años")
+        val anti = inmueble.antiguedad
+        Text("Antigüedad: ${if (anti <= 1) "$anti año" else "$anti años"}")
         Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-            text = "$ $formattedPrice",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = Color(0xFF1A1A1A))
+        Text("$ $formattedPrice", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color(0xFF1A1A1A))
         Text("$ $formattedPriceAdmin administración")
-
         Spacer(modifier = Modifier.height(12.dp))
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            /*PropertyFeature(Icons.Default.Bed, "3 Habs")
-            PropertyFeature(Icons.Default.Shower, "3 Baños")
-            PropertyFeature(Icons.Default.SquareFoot, "110 m²")
-            PropertyFeature(Icons.Default.DirectionsCar, "2 Parqueaderos")*/
-
-            PropertyFeature(Icons.Default.Bed, "${`inmueble.kt`.numHabitaciones} Habs")
-            PropertyFeature(Icons.Default.Shower, "${`inmueble.kt`.numBaños} Baños")
-            PropertyFeature(Icons.Default.SquareFoot, "${`inmueble.kt`.metrosCuadrados} m²")
-            PropertyFeature(Icons.Default.DirectionsCar, "${`inmueble.kt`.numParqueaderos} Parqueaderos")
+            PropertyFeature(Icons.Default.Bed, "${inmueble.numHabitaciones} Habs")
+            PropertyFeature(Icons.Default.Shower, "${inmueble.numBanos} Baños")
+            PropertyFeature(Icons.Default.SquareFoot, "${inmueble.metrosCuadrados} m²")
+            PropertyFeature(Icons.Default.DirectionsCar, "${inmueble.numParqueaderos} Parqueaderos")
         }
     }
 }
 
 @Composable
-fun PropertyDescription(`inmueble.kt`: `Inmueble.kt`) {
+fun PropertyDescription(inmueble: Inmueble) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Descripción", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(" ${`inmueble.kt`.descripcion} ".trimIndent())
-
+        Text(inmueble.descripcion.trimIndent())
     }
 }
 
 @Composable
-fun PropertyLocation(`inmueble.kt`: `Inmueble.kt`) {
+fun PropertyLocation(inmueble: Inmueble) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Ubicación principal", fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Spacer(Modifier.height(4.dp))
-        // Mostramos barrio y ciudad desde el inmueble
-        Text("${`inmueble.kt`.barrio}, ${`inmueble.kt`.ciudad}", fontSize = 16.sp)
-
+        Text("${inmueble.barrio}, ${inmueble.ciudad}", fontSize = 16.sp)
         Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
-fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
+fun PropertyMap(inmueble: Inmueble) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(`inmueble.kt`.latitud, `inmueble.kt`.longitud), 15f)
+        position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
     }
 
     LaunchedEffect(Unit) {
@@ -243,13 +200,10 @@ fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
                     val origin = LatLng(it.latitude, it.longitude)
                     userLocation = origin
 
-                    val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${`inmueble.kt`.latitud},${`inmueble.kt`.longitud}&key=AIzaSyDKjhqaBtcvLF4zW_VsHkXZYi3y4lCWeh0"
-
-
+                    val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=YOUR_API_KEY"
                     val client = okhttp3.OkHttpClient()
                     val request = okhttp3.Request.Builder().url(url).build()
 
-                    // Mueve la red al hilo de IO
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             val response = client.newCall(request).execute()
@@ -281,7 +235,6 @@ fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
         }
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -294,17 +247,8 @@ fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
             properties = MapProperties(isMyLocationEnabled = userLocation != null),
             uiSettings = MapUiSettings(zoomControlsEnabled = false)
         ) {
-            Marker(
-                state = MarkerState(position = LatLng(`inmueble.kt`.latitud, `inmueble.kt`.longitud)),
-                title = "Inmueble",
-                snippet = `inmueble.kt`.direccion
-            )
-            userLocation?.let {
-                Marker(
-                    state = MarkerState(position = it),
-                    title = "Tú"
-                )
-            }
+            Marker(state = MarkerState(position = LatLng(inmueble.latitud, inmueble.longitud)), title = "Inmueble", snippet = inmueble.direccion)
+            userLocation?.let { Marker(state = MarkerState(position = it), title = "Tú") }
             if (routePoints.isNotEmpty()) {
                 Polyline(points = routePoints, color = Color.Blue, width = 6f)
             }
@@ -312,8 +256,7 @@ fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
 
         IconButton(
             onClick = {
-                cameraPositionState.position =
-                    CameraPosition.fromLatLngZoom(LatLng(`inmueble.kt`.latitud, `inmueble.kt`.longitud), 15f)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -326,10 +269,8 @@ fun PropertyMap(`inmueble.kt`: `Inmueble.kt`) {
     }
 }
 
-
-
 @Composable
-fun ContactButton(`inmueble.kt`: `Inmueble.kt`) {
+fun ContactButton(inmueble: Inmueble) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -343,8 +284,6 @@ fun ContactButton(`inmueble.kt`: `Inmueble.kt`) {
                 contentColor = Color.Black
             ),
             modifier = Modifier.fillMaxWidth()
-
-
         ) {
             Icon(Icons.Default.ChatBubble, contentDescription = "Contactar")
             Spacer(modifier = Modifier.width(8.dp))
@@ -365,11 +304,10 @@ fun PropertyFeature(icon: ImageVector, label: String) {
 @Composable
 fun PreviewPropertyScrollMode() {
     RootsTheme {
-        // Si quieres previsualizar:
-        val first = InmuebleRepository.`inmueble.kts`.first()
+        val first = InmuebleRepository.inmuebles.first()
         PropertyScrollModeScreen(
             navController = rememberNavController(),
-            propertyId    = first.id
+            propertyId = first.id
         )
     }
 }
@@ -408,5 +346,3 @@ fun decodePolyline(encoded: String): List<LatLng> {
     }
     return poly
 }
-
-

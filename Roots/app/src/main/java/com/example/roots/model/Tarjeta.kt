@@ -1,3 +1,5 @@
+package com.example.roots.model
+
 data class Tarjeta(
     val id: Int = 0,
     val nombreTitular: String = "",

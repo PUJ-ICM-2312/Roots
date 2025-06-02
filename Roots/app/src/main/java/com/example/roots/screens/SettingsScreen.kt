@@ -22,8 +22,7 @@ import com.example.roots.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.components.BottomNavBar
-import com.example.roots.data.UsuarioRepository
-import com.example.roots.model.Usuario
+import com.example.roots.repository.UsuarioRepository
 import coil.compose.AsyncImage
 import com.example.roots.ui.theme.RootsTheme
 import java.io.File

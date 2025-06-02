@@ -25,8 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 
 import com.example.roots.screens.Screen
-import com.example.roots.services.SecureStorage
-import com.example.roots.services.showBiometricPrompt
+import com.example.roots.service.SecureStorage
+import com.example.roots.service.showBiometricPrompt
 import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
 

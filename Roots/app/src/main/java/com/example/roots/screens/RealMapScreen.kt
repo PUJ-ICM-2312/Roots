@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -33,25 +32,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
-import com.example.roots.data.InmuebleRepository
+import com.example.roots.repository.InmuebleRepository
 import com.example.roots.ui.theme.RootsTheme
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.example.roots.data.MockInmuebles
-import com.example.roots.model.`Inmueble.kt`
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
-import com.google.android.libraries.places.api.net.PlacesClient
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import android.util.Log
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.CameraPosition
 
 
@@ -62,7 +57,7 @@ fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
-    val inmuebles = InmuebleRepository.`inmueble.kts`
+    val inmuebles = InmuebleRepository.inmuebles
 
 
     var userLocation by remember { mutableStateOf<LatLng?>(null) }

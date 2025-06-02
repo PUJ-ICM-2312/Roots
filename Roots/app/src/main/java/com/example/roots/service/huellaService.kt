@@ -1,7 +1,6 @@
-package com.example.roots.services
+package com.example.roots.service
 
 import android.content.Context
-import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 

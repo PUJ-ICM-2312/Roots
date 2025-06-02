@@ -1,12 +1,11 @@
 package com.example.roots.screens
 
+import com.example.roots.model.Usuario
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -40,10 +38,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
-import com.example.roots.data.UsuarioRepository
-import com.example.roots.model.Usuario
+import com.example.roots.repository.UsuarioRepository
 import com.example.roots.ui.theme.RootsTheme
-import com.google.accompanist.permissions.rememberPermissionState
 import saveImageToInternalStorage
 import java.io.File
 import java.io.FileOutputStream

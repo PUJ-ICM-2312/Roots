@@ -1,15 +1,15 @@
 package com.example.roots.model
 
 data class Usuario(
-    val id: String = "",
+    val id: Int = 0,
     val nombres: String = "",
     val apellidos: String = "",
     val correo: String = "",
     val fotoPath: String = "",
     val celular: String = "",
     val cedula: String = "",
-    val publicados: List<`Inmueble.kt`> = emptyList(),
-    val favoritos: List<`Inmueble.kt`> = emptyList(),
+    val publicados: List<Inmueble> = emptyList(),
+    val favoritos: List<Inmueble> = emptyList(),
     val tarjetas: List<Tarjeta> = emptyList(),
     val suscripciones: List<Suscripcion> = emptyList(),
     val chatIds: List<String> = emptyList()
