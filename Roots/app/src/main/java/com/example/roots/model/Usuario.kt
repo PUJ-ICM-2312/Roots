@@ -1,7 +1,7 @@
 package com.example.roots.model
 
 data class Usuario(
-    val id: Int = 0,
+    val id: String = "",
     val nombres: String = "",
     val apellidos: String = "",
     val correo: String = "",

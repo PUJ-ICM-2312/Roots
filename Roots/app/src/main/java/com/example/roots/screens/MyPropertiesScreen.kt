@@ -29,6 +29,7 @@ import com.example.roots.ui.theme.RootsTheme
 fun MyPropertiesScreen(navController: NavController) {
     val properties = InmuebleRepository.inmuebles
 
+
     Scaffold(bottomBar = { BottomNavBar(navController) }) {
         Column(
             modifier = Modifier

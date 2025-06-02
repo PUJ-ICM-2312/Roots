@@ -22,7 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
 import com.example.roots.service.SecureStorage
 import com.example.roots.service.showBiometricPrompt
-import com.example.roots.ui.theme.RootsTheme
+//import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -171,10 +171,3 @@ fun SignUpScreen(navController: NavController) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    RootsTheme {
-        SignUpScreen(navController = rememberNavController())
-    }
-}

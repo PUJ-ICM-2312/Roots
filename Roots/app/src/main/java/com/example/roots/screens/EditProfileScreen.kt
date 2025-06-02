@@ -39,6 +39,8 @@ import coil.compose.AsyncImage
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
 import com.example.roots.repository.UsuarioRepository
+import com.example.roots.service.LoginService
+import com.example.roots.service.UsuarioService
 import com.example.roots.ui.theme.RootsTheme
 import saveImageToInternalStorage
 import java.io.File
@@ -47,6 +49,9 @@ import java.io.FileOutputStream
 /**
  * Helper para guardar un Bitmap en internal storage y devolver su ruta absoluta.
  */
+
+
+
 private fun saveBitmapToInternalStorage(context: android.content.Context, bmp: Bitmap): String {
     val filename = "user_${System.currentTimeMillis()}.png"
     val file = context.filesDir.resolve(filename)
@@ -74,7 +79,8 @@ private fun saveImageToInternalStorage(context: Context, uri: Uri): String {
 @Composable
 fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
-    val repoUser = UsuarioRepository.usuario
+    val usuarioRepository = UsuarioRepository()
+    val usuarioService = UsuarioService(usuarioRepository)
 
     /*// estados inicializados con los datos actuales
     var profileImagePath by remember { mutableStateOf(repoUser.fotoPath) }
@@ -83,15 +89,17 @@ fun EditProfileScreen(navController: NavController) {
     // 1) permiso
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
 */
-    var nombres   by remember { mutableStateOf(repoUser.nombres) }
-    var apellidos by remember { mutableStateOf(repoUser.apellidos) }
-    var correo    by remember { mutableStateOf(repoUser.correo) }
-    var celular   by remember { mutableStateOf(repoUser.celular) }
-    var cedula    by remember { mutableStateOf(repoUser.cedula) }
+
+    var currentUser: Usuario = usuarioService.obtener(LoginService.getCurrentUser().uid)
+    var nombres   by remember { mutableStateOf(currentUser.nombres) }
+    var apellidos by remember { mutableStateOf(currentUser.apellidos) }
+    var correo    by remember { mutableStateOf(currentUser.correo) }
+    var celular   by remember { mutableStateOf(currentUser.celular) }
+    var cedula    by remember { mutableStateOf(currentUser.cedula) }
 
 
     // estado para la ruta de la foto en disco
-    var profileImagePath by remember { mutableStateOf(repoUser.fotoPath) }
+    var profileImagePath by remember { mutableStateOf(currentUser.fotoPath) }
 
     // 1) launcher para tomar foto (recibe un Bitmap)
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -225,7 +233,7 @@ fun EditProfileScreen(navController: NavController) {
             Button(
                 onClick = {
                     val actualizado = Usuario(
-                        id        = repoUser.id,
+                        id        = currentUser.id,
                         nombres   = nombres,
                         apellidos = apellidos,
                         correo    = correo,

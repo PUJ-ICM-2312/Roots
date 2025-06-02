@@ -7,7 +7,7 @@ import com.example.roots.model.TipoPublicacion
 object MockInmuebles {
     val sample = listOf(
         Inmueble(
-            id = 1,
+            id = "1",
             direccion = "Cra 50 #20-30",
             precio = 350_000_000f,
             estrato = 4,
@@ -29,7 +29,7 @@ object MockInmuebles {
             longitud = -74.056789
         ),
         Inmueble(
-            id = 2,
+            id = "",
             direccion = "Cl 85 #15-10, Bogotá",
             precio = 450_000_000f,
             estrato = 5,
@@ -51,7 +51,7 @@ object MockInmuebles {
             longitud = -74.073456
         ),
         Inmueble(
-            id = 3,
+            id = "",
             direccion = "Cra 7 #112-25",
             precio = 480_000_000f,
             estrato = 5,
