@@ -1,12 +1,19 @@
 package com.example.roots.screens
 
+import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,139 +21,215 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roots.R
 import androidx.navigation.NavController
-import com.example.roots.components.BottomNavBar
+import coil.compose.rememberAsyncImagePainter
+import com.example.roots.model.Chat
+import com.example.roots.model.Inmueble
+import com.example.roots.repository.InmuebleRepository
+import com.example.roots.service.ChatService
+import com.example.roots.service.InmuebleService
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun MessagesScreen(navController: NavController) {
-    Scaffold(
-        bottomBar = { BottomNavBar(navController) }
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Mis Inmuebles",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+    // 1) Obtenemos el UID del usuario actual (si no está logueado, salimos)
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-            Spacer(modifier = Modifier.height(16.dp))
+    // 2) Instanciamos los servicios
+    val inmService = remember { InmuebleService(InmuebleRepository()) }
+    val chatService = remember { ChatService() }
+    val context = LocalContext.current
 
-            HorizontalPropertyList()
+    // 3) Estados:
+    //    misPropiedades -> lista de Inmueble publicados por este usuario
+    var misPropiedades by remember { mutableStateOf<List<Inmueble>>(emptyList()) }
+    //    allChats -> todos los chats en los que participa este usuario
+    var allChats by remember { mutableStateOf<List<Chat>>(emptyList()) }
+    //    filtros -> conjunto de propertyIds seleccionados para filtrar
+    var filtros by remember { mutableStateOf<Set<String>>(emptySet()) }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Mensajes",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Mensajes simulados para cada inmueble
-            // En la sección de mensajes:
-            MessageItem(R.drawable.inmueble1, "Andres Perez", "Me encantó el balcón y la vista al parque.")
-            MessageItem(R.drawable.inmueble3, "Juan Diego Reyes", "¿El precio es negociable?")
-            MessageItem(R.drawable.inmueble2, "Daniel Gonzalez", "¿Tiene parqueadero cubierto?", bold = true)
-            MessageItem(R.drawable.inmueble5, "Valentina Valencia", "¡Justo lo que buscaba para mudarme con mi gato!")
-            MessageItem(R.drawable.inmueble4, "Camila López", "¿Incluye lavadora y estufa?", bold = true)
-
+    // ─── CARGAR PROPIEDADES PROPIAS ───
+    LaunchedEffect(currentUserId) {
+        inmService.getPropertiesOfUser(currentUserId) { lista ->
+            misPropiedades = lista
         }
     }
-}
 
-@Composable
-fun HorizontalPropertyList() {
-    val properties = listOf(
-        Pair(R.drawable.inmueble1, "Santa Viviana"),
-        Pair(R.drawable.inmueble2, "Polo Club"),
-        Pair(R.drawable.inmueble3, "Hayuelos"),
-        Pair(R.drawable.inmueble4, "Chico Norte"),
-        Pair(R.drawable.inmueble5, "Balmoral Norte"),
-        Pair(R.drawable.inmueble6, "Castellana")
-    )
+    // ─── ESCUCHAR CHATS ───
+    var listenerChats: ListenerRegistration? = null
+    DisposableEffect(currentUserId) {
+        // Creamos el Query que trae todos los chats donde 'participantes' contenga currentUserId
+        val query: Query = chatService.getChatsForUser(currentUserId)
 
-    Row(
-        modifier = Modifier
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        properties.forEach { (imageId, label) ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(end = 16.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                ) {
-                    Image(
-                        painter = painterResource(id = imageId),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                    )
+        listenerChats = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Toast.makeText(context, "Error al cargar chats", Toast.LENGTH_SHORT).show()
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val lista = snapshot.documents.mapNotNull { doc ->
+                    val chat = doc.toObject(Chat::class.java)
+                    chat?.copy(id = doc.id)
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = label,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                allChats = lista
+            }
+        }
+        onDispose {
+            listenerChats?.remove()
+        }
+    }
+
+    // ─── FILTRAR CHATS ───
+    val chatsAMostrar by derivedStateOf {
+        if (filtros.isEmpty()) {
+            allChats
+        } else {
+            allChats.filter { it.propertyId in filtros }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // ─── LISTA HORIZONTAL DE PROPIEDADES PROPIAS (FILTROS) ───
+        if (misPropiedades.isNotEmpty()) {
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5))
+                    .padding(vertical = 8.dp)
+            ) {
+                items(misPropiedades) { prop ->
+                    // Cada tarjeta es clickeable para alternar filtro
+                    val seleccionado = prop.id in filtros
+                    Card(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .size(width = 120.dp, height = 120.dp)
+                            .clickable {
+                                filtros = if (seleccionado) {
+                                    filtros - prop.id
+                                } else {
+                                    filtros + prop.id
+                                }
+                            },
+                        shape = RoundedCornerShape(8.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (seleccionado) Color(0xFFB2DFDB) else Color.White
+                        )
+                    ) {
+                        Column {
+                            // Foto (primera URL en prop.fotos)
+                            if (prop.fotos.isNotEmpty()) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(prop.fotos.first()),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .height(80.dp)
+                                        .fillMaxWidth(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .height(80.dp)
+                                        .fillMaxWidth()
+                                        .background(Color.LightGray),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("Sin foto", fontSize = 12.sp)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = prop.barrio,
+                                modifier = Modifier.padding(horizontal = 4.dp),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ─── LISTADO VERTICAL DE CHATS ───
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(chatsAMostrar) { chat ->
+                ChatListItem(chat = chat, navController = navController)
+                Divider()
             }
         }
     }
 }
 
 @Composable
-fun MessageItem(imageId: Int, title: String, message: String, bold: Boolean = false) {
+fun ChatListItem(chat: Chat, navController: NavController) {
+    // Mostramos:
+    // 1) Imagen (chat.propertyFoto)
+    // 2) Barrio (chat.propertyBarrio)
+    // 3) Último mensaje (chat.ultimoMensaje)
+    // 4) Fecha/hora (chat.timestampUltimoMensaje)
+
+    val fecha = remember(chat.timestampUltimoMensaje) {
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        sdf.format(Date(chat.timestampUltimoMensaje))
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .clickable { navController.navigate("chat_room/${chat.id}") }
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = imageId),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-        )
+        // Foto del inmueble (si existe)
+        if (chat.propertyFoto.isNotBlank()) {
+            Image(
+                painter = rememberAsyncImagePainter(chat.propertyFoto),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Default.Home, contentDescription = null, tint = Color.White)
+            }
+        }
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = title,
+                text = chat.propertyBarrio,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 16.sp
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = message,
-                fontSize = 13.sp,
-                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
+                text = chat.ultimoMensaje.ifBlank { "— Sin mensajes —" },
+                fontSize = 14.sp,
+                maxLines = 1
             )
         }
-    }
 
-    Divider(thickness = 1.dp, color = Color.Black.copy(alpha = 0.2f))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = fecha, fontSize = 12.sp, color = Color.Gray)
+    }
 }

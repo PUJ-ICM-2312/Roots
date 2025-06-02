@@ -4,6 +4,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class Inmueble(
+    val usuarioId: String = "",
     val id: String = "",
     val direccion: String = "",
     val barrio: String = "",

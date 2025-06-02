@@ -312,7 +312,7 @@ fun ContactButton(
         Button(
             onClick = {
                 // Dueño del inmueble
-                val ownerUserId = inmueble.propietarioUid
+                val ownerUserId = inmueble.usuarioId
                 // Primera foto como thumbnail (o cadena vacía si no hay)
                 val fotoThumbnail = inmueble.fotos.firstOrNull().orEmpty()
                 // Barrio del inmueble

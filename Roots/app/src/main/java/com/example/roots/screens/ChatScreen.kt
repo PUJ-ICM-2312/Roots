@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,116 +23,95 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.roots.R
 import androidx.navigation.NavController
+import com.example.roots.model.Mensaje
+import com.example.roots.service.ChatService
+import com.google.firebase.auth.FirebaseAuth
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
     navController: NavController,
-    username: String = "Andres Perez",
-    userImage: Int = R.drawable.usuario1
+    chatId: String
 ) {
-    var messageText by remember { mutableStateOf(TextFieldValue("")) }
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val chatService = remember { ChatService() }
 
-    val messages = listOf(
-        Message("Hola, me interesa tu apartamento en Santa Viviana.", false),
-        Message("¡Hola! Claro, ¿te gustaría visitarlo?", true),
-        Message("Sí, ¿podría este sábado en la tarde?", false),
-        Message("Perfecto, agendado a las 3:00 p.m.", true)
-    )
+    // 1) Estado para mensajes
+    var mensajes by remember { mutableStateOf<List<Mensaje>>(emptyList()) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.padding(top = 30.dp),
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = userImage),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = username, fontSize = 18.sp)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    placeholder = { Text("Escribe un mensaje...") },
+    // 2) Escuchar mensajes en tiempo real
+    LaunchedEffect(chatId) {
+        chatService.getMessagesOfChat(chatId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                val lista = snapshot?.documents?.mapNotNull { doc ->
+                    val msg = doc.toObject(Mensaje::class.java)
+                    msg?.copy(id = doc.id, idChat = chatId)
+                } ?: emptyList()
+                mensajes = lista
+            }
+    }
+
+    // 3) Campo de texto para escribir
+    var nuevoTexto by remember { mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+            items(mensajes) { msg ->
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp)
-                )
-                Button(
-                    onClick = {
-                        messageText = TextFieldValue("")
-                    },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5))
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = if (msg.idEmisor == currentUserId)
+                        Arrangement.End else Arrangement.Start
                 ) {
-                    Text("Enviar", color = Color.Black)
+                    Text(
+                        text = msg.contenido,
+                        color = if (msg.idEmisor == currentUserId) Color.White else Color.Black,
+                        modifier = Modifier
+                            .background(
+                                if (msg.idEmisor == currentUserId) Color(0xFF4CAF50)
+                                else Color(0xFFE0E0E0),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(8.dp)
+                    )
                 }
             }
         }
-    ) { innerPadding ->
-        Column(
+        Divider()
+
+        Row(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .navigationBarsPadding()
-                .padding(horizontal = 12.dp)
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp)
+            OutlinedTextField(
+                value = nuevoTexto,
+                onValueChange = { nuevoTexto = it },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Escribe un mensaje...") }
+            )
+            IconButton(
+                onClick = {
+                    if (nuevoTexto.trim().isNotEmpty()) {
+                        val mensaje = Mensaje(
+                            id = "",
+                            idChat = chatId,
+                            idEmisor = currentUserId,
+                            contenido = nuevoTexto.trim(),
+                            timestamp = System.currentTimeMillis(),
+                            leidoPor = listOf(currentUserId)
+                        )
+                        chatService.sendMessage(chatId, mensaje) { success ->
+                            if (success) nuevoTexto = ""
+                        }
+                    }
+                }
             ) {
-                items(messages) { msg ->
-                    ChatBubble(text = msg.text, isMine = msg.isMine)
-                }
+                Icon(Icons.Default.Send, contentDescription = "Enviar")
             }
         }
     }
 }
 
-@Composable
-fun ChatBubble(text: String, isMine: Boolean) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    color = if (isMine) Color(0xFFD5FDE5) else Color(0xFFE0E0E0),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(12.dp)
-                .widthIn(max = 250.dp)
-        ) {
-            Text(text = text, color = Color.Black)
-        }
-    }
-}
-
-data class Message(val text: String, val isMine: Boolean)
