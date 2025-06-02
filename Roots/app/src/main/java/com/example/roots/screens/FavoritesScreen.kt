@@ -4,23 +4,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.roots.ui.theme.RootsTheme
-import com.example.roots.components.BottomNavBar
+import com.example.roots.model.Inmueble
 import com.example.roots.repository.InmuebleRepository
-
+import com.example.roots.components.BottomNavBar
 @Composable
 fun FavoritesScreen(navController: NavController) {
-    val favoritos = InmuebleRepository.inmuebles
-        .filter { it.numFavoritos > 0 }
+    val favoritos = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
+
+    // Carga inicial de favoritos desde Firebase
+    LaunchedEffect(Unit) {
+        InmuebleRepository().getAll { list ->
+            favoritos.value = list.filter { it.numFavoritos > 0 }
+        }
+    }
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) { padding ->
@@ -42,18 +46,9 @@ fun FavoritesScreen(navController: NavController) {
 
             Spacer(Modifier.height(16.dp))
 
-            // Reutilizamos la grilla de MyProperties
-            PropertyGrid(properties = favoritos, navController = navController)
+            PropertyGrid(properties = favoritos.value, navController = navController)
 
             Spacer(Modifier.height(24.dp))
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewFavorites() {
-    RootsTheme {
-        FavoritesScreen(navController = rememberNavController())
     }
 }

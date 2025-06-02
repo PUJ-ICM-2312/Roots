@@ -24,4 +24,12 @@ class InmuebleRepository {
     fun delete(id: Int) {
         collection.document(id.toString()).delete()
     }
+
+    fun getAll(onResult: (List<Inmueble>) -> Unit) {
+        collection.get().addOnSuccessListener { result ->
+            val list = result.mapNotNull { it.toObject(Inmueble::class.java) }
+            onResult(list)
+        }
+    }
+
 }

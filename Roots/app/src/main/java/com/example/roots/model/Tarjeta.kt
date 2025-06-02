@@ -1,7 +1,7 @@
 package com.example.roots.model
 
 data class Tarjeta(
-    val id: Int = 0,
+    val id: String = "",
     val nombreTitular: String = "",
     val noTarjeta: Int = 0,
     val pin: Int = 0,

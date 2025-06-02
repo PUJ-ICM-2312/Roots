@@ -2,7 +2,7 @@ package com.example.roots.model
 
 
 data class Inmueble(
-    val id: Int = 0,
+    val id: String = "",
     val direccion: String = "",
     val barrio: String = "",
     val ciudad: String = "",
