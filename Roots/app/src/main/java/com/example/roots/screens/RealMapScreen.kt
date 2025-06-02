@@ -58,6 +58,9 @@ import com.example.roots.model.Inmueble
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RealMapScreen(navController: NavController) {
+    val myInmuebleColor = android.graphics.Color.parseColor("#B0E57C")  // verde claro
+    val otherInmuebleColor = android.graphics.Color.parseColor("#a2f9fd") // azul claro
+    val currentUserId = remember { com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid }
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
@@ -184,9 +187,25 @@ fun RealMapScreen(navController: NavController) {
                     isMyLocationEnabled = userLocation != null
                 )
             ) {
-                val markerIcon = remember {
-                    bitmapDescriptorFromVector(context, R.drawable.hojamapa)
+                inmuebles.value.forEach { inmueble ->
+                    val isMine = inmueble.usuarioId == currentUserId
+                    val bgColor = if (isMine) myInmuebleColor else otherInmuebleColor
+                    val icon = remember(inmueble.id) {
+                        bitmapDescriptorFromVector(context, R.drawable.hojamapa, bgColor)
+                    }
+
+                    Marker(
+                        state = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
+                        title = inmueble.direccion,
+                        snippet = "₡${inmueble.precio} • ${inmueble.metrosCuadrados}m²",
+                        icon = icon,
+                        onClick = {
+                            navController.navigate("${Screen.PropertyScrollMode.route}/${inmueble.id}")
+                            true
+                        }
+                    )
                 }
+
 
                 //markers.forEach { (position, title) ->
                 // Marcadores de propiedades
@@ -198,19 +217,6 @@ fun RealMapScreen(navController: NavController) {
                         icon = markerIcon
                     )
                 }*/
-                inmuebles.value.forEach { inmueble ->
-                    Marker(
-                        state = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
-                        title = inmueble.direccion,
-                        snippet = "₡${inmueble.precio} • ${inmueble.metrosCuadrados}m²",
-                        icon = markerIcon,
-                        onClick = {
-                            navController.navigate("${Screen.PropertyScrollMode.route}/${inmueble.id}")
-                            true
-                        }
-                    )
-                }
-
 
 
                 userLocation?.let {
@@ -282,14 +288,14 @@ private fun requestLocationUpdates(
 }
 
 // ✅ ÍCONO PERSONALIZADO PARA MARCADORES
-fun bitmapDescriptorFromVector(context: Context, drawableId: Int): BitmapDescriptor {
+fun bitmapDescriptorFromVector(context: Context, drawableId: Int, bgColor: Int): BitmapDescriptor {
     val drawable: Drawable = ContextCompat.getDrawable(context, drawableId)!!
     val size = 64
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
 
     val paint = android.graphics.Paint().apply {
-        color = android.graphics.Color.parseColor("#a2f9fd")
+        color = bgColor
         isAntiAlias = true
     }
     canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint)
