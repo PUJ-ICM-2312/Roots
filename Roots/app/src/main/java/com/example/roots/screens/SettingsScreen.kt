@@ -32,6 +32,7 @@ import java.io.File
 fun SettingsScreen(navController: NavController) {
     val user = UsuarioRepository.usuario
 
+
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
     ) {

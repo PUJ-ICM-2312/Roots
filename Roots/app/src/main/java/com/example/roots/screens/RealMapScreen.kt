@@ -48,6 +48,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import android.util.Log
 import com.google.android.gms.maps.model.CameraPosition
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import com.example.roots.model.Inmueble
 
 
 @SuppressLint("MissingPermission")
@@ -57,7 +61,13 @@ fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
-    val inmuebles = InmuebleRepository.inmuebles
+    val inmuebles = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        InmuebleRepository().getAll { list ->
+            inmuebles.value = list
+        }
+    }
 
 
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
@@ -188,19 +198,19 @@ fun RealMapScreen(navController: NavController) {
                         icon = markerIcon
                     )
                 }*/
-                inmuebles.forEach { inmueble ->
+                inmuebles.value.forEach { inmueble ->
                     Marker(
-                        state   = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
-                        title   = inmueble.direccion,
+                        state = MarkerState(LatLng(inmueble.latitud, inmueble.longitud)),
+                        title = inmueble.direccion,
                         snippet = "₡${inmueble.precio} • ${inmueble.metrosCuadrados}m²",
-                        icon    = markerIcon, // ¡aquí está lo que faltaba!
+                        icon = markerIcon,
                         onClick = {
-                            // Navegar al detalle del inmueble
                             navController.navigate("${Screen.PropertyScrollMode.route}/${inmueble.id}")
                             true
                         }
                     )
                 }
+
 
 
                 userLocation?.let {
