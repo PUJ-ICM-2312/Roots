@@ -73,7 +73,7 @@ object MockInmuebles {
             longitud = -74.0383
         ),
         Inmueble(
-            id = 4,
+            id = 4.toString(),
             direccion = "Cl 85 #20-50",
             precio = 3_200_000f,
             estrato = 4,
@@ -95,7 +95,7 @@ object MockInmuebles {
             longitud = -74.0554
         ),
         Inmueble(
-            id = 5,
+            id = 5.toString(),
             direccion = "Av El Dorado #30-15",
             precio = 650_000_000f,
             estrato = 3,
@@ -117,7 +117,7 @@ object MockInmuebles {
             longitud = -74.0895
         ),
         Inmueble(
-            id = 6,
+            id = 6.toString(),
             direccion = "Cll 140 #10-20",
             precio = 250_000_000f,
             estrato = 3,
@@ -139,7 +139,7 @@ object MockInmuebles {
             longitud = -74.0931
         ),
         Inmueble(
-            id = 7,
+            id = 7.toString(),
             direccion = "Av de Las Américas #68-40",
             precio = 1_800_000f,
             estrato = 2,
