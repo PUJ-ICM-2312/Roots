@@ -22,18 +22,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roots.ui.theme.RootsTheme
-import kotlinx.coroutines.launch
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.roots.model.Inmueble
-import com.example.roots.repository.InmuebleRepository
+import com.example.roots.service.InmuebleService
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,19 +47,48 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import androidx.navigation.NavController
+import com.example.roots.repository.InmuebleRepository
+import com.example.roots.ui.theme.RootsTheme
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PropertyScrollModeScreen(
     navController: NavController,
-    propertyId: Int
+    propertyId: String      // <— ahora String, no Int
 ) {
-    val inmueble = remember(propertyId) {
-        InmuebleRepository.inmuebles.firstOrNull { it.id == propertyId }
-    } ?: run {
-        LaunchedEffect(Unit) { navController.popBackStack() }
+    // 1) Estado local para el inmueble que viene de Firestore
+    val inmuebleService = remember { InmuebleService(InmuebleRepository()) }
+    var inmueble by remember { mutableStateOf<Inmueble?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    // 2) Al montar la pantalla, pedimos a Firestore que nos devuelva el Inmueble
+    LaunchedEffect(propertyId) {
+        inmuebleService.obtener(propertyId) { fetched ->
+            if (fetched != null) {
+                inmueble = fetched
+                isLoading = false
+            } else {
+                // Si no existe o hay error, volvemos atrás
+                navController.popBackStack()
+            }
+        }
+    }
+
+    // 3) Mientras carga, mostramos un ProgressIndicator centrado
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
         return
     }
+
+    // 4) A estas alturas, `inmueble` no es nulo (lo hemos validado en el LaunchEffect)
+    val item = inmueble!!
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
@@ -74,12 +98,12 @@ fun PropertyScrollModeScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            ImageCarousel(inmueble)
-            PropertyHeaderInfo(inmueble)
-            PropertyDescription(inmueble)
-            PropertyLocation(inmueble)
-            PropertyMap(inmueble)
-            ContactButton(inmueble)
+            ImageCarousel(item)
+            PropertyHeaderInfo(item)
+            PropertyDescription(item)
+            PropertyLocation(item)
+            PropertyMap(item)
+            ContactButton(item)
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
@@ -98,35 +122,16 @@ fun ImageCarousel(inmueble: Inmueble) {
             .padding(8.dp)
     ) { page ->
         val item = inmueble.fotos[page]
-        when {
-            item is Int -> {
-                Image(
-                    painter = painterResource(id = item),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            item is String -> {
-                AsyncImage(
-                    model = item,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            }
-            else -> {
-                Spacer(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp))
-            }
-        }
+        // Asumimos que fotos es lista de URLs (Strings). Si antes había enteros, Firebase devuelve Strings.
+        AsyncImage(
+            model = item,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)),
+            contentScale = ContentScale.Crop
+        )
     }
-
 }
 
 @Composable
@@ -190,7 +195,10 @@ fun PropertyMap(inmueble: Inmueble) {
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var routePoints by remember { mutableStateOf<List<LatLng>>(emptyList()) }
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
+        position = CameraPosition.fromLatLngZoom(
+            LatLng(inmueble.latitud, inmueble.longitud),
+            15f
+        )
     }
 
     LaunchedEffect(Unit) {
@@ -200,7 +208,9 @@ fun PropertyMap(inmueble: Inmueble) {
                     val origin = LatLng(it.latitude, it.longitude)
                     userLocation = origin
 
-                    val url = "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=YOUR_API_KEY"
+                    // Reemplaza "YOUR_API_KEY" por tu clave de Directions API
+                    val url =
+                        "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=YOUR_API_KEY"
                     val client = okhttp3.OkHttpClient()
                     val request = okhttp3.Request.Builder().url(url).build()
 
@@ -247,8 +257,14 @@ fun PropertyMap(inmueble: Inmueble) {
             properties = MapProperties(isMyLocationEnabled = userLocation != null),
             uiSettings = MapUiSettings(zoomControlsEnabled = false)
         ) {
-            Marker(state = MarkerState(position = LatLng(inmueble.latitud, inmueble.longitud)), title = "Inmueble", snippet = inmueble.direccion)
-            userLocation?.let { Marker(state = MarkerState(position = it), title = "Tú") }
+            Marker(
+                state = MarkerState(position = LatLng(inmueble.latitud, inmueble.longitud)),
+                title = "Inmueble",
+                snippet = inmueble.direccion
+            )
+            userLocation?.let {
+                Marker(state = MarkerState(position = it), title = "Tú")
+            }
             if (routePoints.isNotEmpty()) {
                 Polyline(points = routePoints, color = Color.Blue, width = 6f)
             }
@@ -256,7 +272,10 @@ fun PropertyMap(inmueble: Inmueble) {
 
         IconButton(
             onClick = {
-                cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(inmueble.latitud, inmueble.longitud), 15f)
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                    LatLng(inmueble.latitud, inmueble.longitud),
+                    15f
+                )
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -304,11 +323,46 @@ fun PropertyFeature(icon: ImageVector, label: String) {
 @Composable
 fun PreviewPropertyScrollMode() {
     RootsTheme {
-        val first = InmuebleRepository.inmuebles.first()
-        PropertyScrollModeScreen(
-            navController = rememberNavController(),
-            propertyId = first.id
+        // En el preview no podemos llamar a Firestore. Creamos un Inmueble ficticio:
+        val dummy = Inmueble(
+            id = "demo",
+            direccion = "Demo Calle 123",
+            barrio = "Demo Barrio",
+            ciudad = "Demo Ciudad",
+            precio = 500000.0f,
+            mensualidadAdministracion = 50000.0f,
+            estrato = 3,
+            numBanos = 2,
+            numParqueaderos = 1,
+            numHabitaciones = 3,
+            metrosCuadrados = 80.0f,
+            antiguedad = 2,
+            numFavoritos = 0,
+            descripcion = "Este es un inmueble de demostración.",
+            fotos = listOf(
+                "https://via.placeholder.com/400x300.png",
+                "https://via.placeholder.com/400x300.png"
+            ),
+            fechaPublicacion = System.currentTimeMillis(),
+            latitud = 4.6515,
+            longitud = -74.0628,
+            tipoPublicacion = com.example.roots.model.TipoPublicacion.Venta,
+            tipoInmueble = com.example.roots.model.TipoInmueble.Apartamento
         )
+        // Como Preview, forzamos que no sea nulo:
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            ImageCarousel(dummy)
+            PropertyHeaderInfo(dummy)
+            PropertyDescription(dummy)
+            PropertyLocation(dummy)
+            PropertyMap(dummy)
+            ContactButton(dummy)
+            Spacer(modifier = Modifier.height(80.dp))
+        }
     }
 }
 
