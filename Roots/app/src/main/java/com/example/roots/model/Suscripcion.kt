@@ -1,7 +1,7 @@
 package com.example.roots.model
 
 data class Suscripcion(
-    val id: Int = 0,
+    val id: String = "",
     val fechaInicio: String = "",  // Guardar como ISO date en Firestore (usar LocalDate si luego lo transformas)
     val fechaFin: String = "",
     val activo: Boolean = false,

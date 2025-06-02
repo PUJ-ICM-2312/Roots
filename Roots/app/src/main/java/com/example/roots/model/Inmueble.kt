@@ -1,8 +1,10 @@
 package com.example.roots.model
 
+import com.google.firebase.firestore.IgnoreExtraProperties
 
+@IgnoreExtraProperties
 data class Inmueble(
-    val id: Int = 0,
+    val id: String = "",
     val direccion: String = "",
     val barrio: String = "",
     val ciudad: String = "",
