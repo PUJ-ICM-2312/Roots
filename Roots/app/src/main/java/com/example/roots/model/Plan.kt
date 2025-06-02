@@ -1,7 +1,7 @@
 package com.example.roots.model
 
 data class Plan(
-    val id: Int = 0,
+    val id: String = "",
     val nombre: String = "",
     val precio: Float = 0f,
     val moneda: String = "",
