@@ -36,6 +36,7 @@ fun NavigationStack() {
         Screen.Payment,
         Screen.PaymentSuccess,
         Screen.Plans,
+        Screen.PropertyScrollMode,
         Screen.Settings,
         Screen.Filter,
         Screen.EditProfile,
@@ -105,14 +106,13 @@ fun NavigationStack() {
                 composable(
                     route = "${Screen.PropertyScrollMode.route}/{propertyId}",
                     arguments = listOf(
-                        navArgument("propertyId") { type = NavType.IntType }
+                        navArgument("propertyId") { type = NavType.StringType }
                     )
                 ) { backStack ->
-                    val id = backStack.arguments?.getInt("propertyId") ?: return@composable
-
+                    val propertyId = backStack.arguments?.getString("propertyId") ?: ""
                     PropertyScrollModeScreen(
                         navController = navController,
-                        propertyId    = id
+                        propertyId = propertyId  // ahora es String
                     )
 
                 }
