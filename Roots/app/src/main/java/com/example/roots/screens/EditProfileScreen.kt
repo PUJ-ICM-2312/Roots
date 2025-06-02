@@ -90,16 +90,33 @@ fun EditProfileScreen(navController: NavController) {
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
 */
 
-    var currentUser: Usuario = usuarioService.obtener(LoginService.getCurrentUser().uid)
-    var nombres   by remember { mutableStateOf(currentUser.nombres) }
-    var apellidos by remember { mutableStateOf(currentUser.apellidos) }
-    var correo    by remember { mutableStateOf(currentUser.correo) }
-    var celular   by remember { mutableStateOf(currentUser.celular) }
-    var cedula    by remember { mutableStateOf(currentUser.cedula) }
+    var currentUser: Usuario? = null
+
+    val firebaseUser = LoginService.getCurrentUser()
+    if (firebaseUser != null) {
+        usuarioService.obtener(firebaseUser.uid) { usuario ->
+            if (usuario != null) {
+                currentUser = usuario
+                println("Usuario actual: ${currentUser?.nombres}")
+                // Aquí ya puedes usar currentUser
+            } else {
+                println("Usuario no encontrado")
+            }
+        }
+    } else {
+        println("No hay usuario autenticado")
+    }
+
+    var nombres   by remember { mutableStateOf(currentUser?.nombres ?: "") }
+    var apellidos by remember { mutableStateOf(currentUser?.apellidos ?: "") }
+    var correo    by remember { mutableStateOf(currentUser?.correo ?: "") }
+    var celular   by remember { mutableStateOf(currentUser?.celular ?: "") }
+    var cedula    by remember { mutableStateOf(currentUser?.cedula ?: "") }
 
 
     // estado para la ruta de la foto en disco
-    var profileImagePath by remember { mutableStateOf(currentUser.fotoPath) }
+    var profileImagePath by remember { mutableStateOf(currentUser?.fotoPath ?: "") }
+
 
     // 1) launcher para tomar foto (recibe un Bitmap)
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -233,7 +250,8 @@ fun EditProfileScreen(navController: NavController) {
             Button(
                 onClick = {
                     val actualizado = Usuario(
-                        id        = currentUser.id,
+                        id        = currentUser?.id ?: ""
+                    ,
                         nombres   = nombres,
                         apellidos = apellidos,
                         correo    = correo,
@@ -241,7 +259,7 @@ fun EditProfileScreen(navController: NavController) {
                         celular   = celular,
                         cedula    = cedula
                     )
-                    UsuarioRepository.updateUsuario(actualizado)
+                    usuarioService.actualizar(actualizado)
                     navController.popBackStack()
                 },
                 modifier = Modifier.fillMaxWidth(),
