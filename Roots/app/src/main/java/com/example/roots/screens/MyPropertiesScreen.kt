@@ -24,11 +24,20 @@ import com.example.roots.components.BottomNavBar
 import com.example.roots.repository.InmuebleRepository
 import com.example.roots.model.Inmueble
 import com.example.roots.ui.theme.RootsTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 @Composable
 fun MyPropertiesScreen(navController: NavController) {
-    val properties = InmuebleRepository.inmuebles
+    val properties = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
 
+    // Cargar desde Firestore
+    LaunchedEffect(Unit) {
+        InmuebleRepository().getAll { list ->
+            properties.value = list
+        }
+    }
 
     Scaffold(bottomBar = { BottomNavBar(navController) }) {
         Column(
@@ -47,7 +56,7 @@ fun MyPropertiesScreen(navController: NavController) {
             )
             Spacer(Modifier.height(16.dp))
 
-            PropertyGrid(properties, navController)
+            PropertyGrid(properties = properties.value, navController = navController)
 
             Spacer(Modifier.height(24.dp))
             Button(
@@ -65,6 +74,7 @@ fun MyPropertiesScreen(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun PropertyGrid(
