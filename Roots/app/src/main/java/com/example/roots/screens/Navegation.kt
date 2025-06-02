@@ -16,12 +16,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.launch
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.navArgument
 import androidx.navigation.NavType
-import com.example.roots.data.MockInmuebles
-import com.example.roots.model.Inmueble
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

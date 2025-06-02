@@ -15,9 +15,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
 import com.example.roots.components.BottomNavBar
-import com.example.roots.data.InmuebleRepository
-import com.example.roots.screens.PropertyGrid
-
+import com.example.roots.repository.InmuebleRepository
 
 @Composable
 fun FavoritesScreen(navController: NavController) {

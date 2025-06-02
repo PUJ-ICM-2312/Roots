@@ -1,4 +1,4 @@
-package com.example.roots.services
+package com.example.roots.service
 
 import com.google.firebase.auth.FirebaseAuth
 

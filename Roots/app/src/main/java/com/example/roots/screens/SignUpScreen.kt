@@ -5,10 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
-import com.example.roots.services.SecureStorage
-import com.example.roots.services.showBiometricPrompt
+import com.example.roots.service.SecureStorage
+import com.example.roots.service.showBiometricPrompt
 import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
 
@@ -62,7 +58,7 @@ fun SignUpScreen(navController: NavController) {
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Usuario") },
+                label = { Text("com.example.roots.model.Usuario") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -108,7 +104,7 @@ fun SignUpScreen(navController: NavController) {
                         .addOnCompleteListener { task ->
                             isLoading = false
                             if (task.isSuccessful) {
-                                Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "com.example.roots.model.Usuario registrado correctamente", Toast.LENGTH_LONG).show()
 
                                 // Mostrar autenticación biométrica
                                 showBiometricPrompt(

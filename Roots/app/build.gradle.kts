@@ -88,7 +88,8 @@ dependencies {
     implementation("androidx.biometric:biometric:1.1.0")
 
     implementation("com.google.maps:google-maps-services:0.18.1") // Para llamadas HTTP si lo haces desde backend
-
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+    implementation ("com.google.firebase:firebase-auth-ktx")
 }
 
 apply(plugin = "com.google.gms.google-services")
