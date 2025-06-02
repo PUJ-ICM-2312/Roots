@@ -27,17 +27,21 @@ import com.example.roots.ui.theme.RootsTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun MyPropertiesScreen(navController: NavController) {
     val properties = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
 
-    // Cargar desde Firestore
     LaunchedEffect(Unit) {
-        InmuebleRepository().getAll { list ->
-            properties.value = list
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            InmuebleRepository().getAll { list ->
+                properties.value = list.filter { it.usuarioId == userId }
+            }
         }
     }
+
 
     Scaffold(bottomBar = { BottomNavBar(navController) }) {
         Column(

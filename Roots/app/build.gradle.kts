@@ -90,6 +90,9 @@ dependencies {
     implementation("com.google.maps:google-maps-services:0.18.1") // Para llamadas HTTP si lo haces desde backend
     implementation ("com.google.firebase:firebase-firestore-ktx")
     implementation ("com.google.firebase:firebase-auth-ktx")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+    implementation("com.google.firebase:firebase-storage-ktx:20.3.0")
+
 }
 
 apply(plugin = "com.google.gms.google-services")
