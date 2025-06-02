@@ -24,13 +24,34 @@ import androidx.navigation.compose.rememberNavController
 import com.example.roots.components.BottomNavBar
 import com.example.roots.repository.UsuarioRepository
 import coil.compose.AsyncImage
+import com.example.roots.model.Usuario
+import com.example.roots.service.LoginService
+import com.example.roots.service.UsuarioService
 import com.example.roots.ui.theme.RootsTheme
 import java.io.File
 
+val usuarioRepository = UsuarioRepository()
+val usuarioService = UsuarioService(usuarioRepository)
 
 @Composable
 fun SettingsScreen(navController: NavController) {
-    val user = UsuarioRepository.usuario
+    var currentUser: Usuario? = null
+
+    val firebaseUser = LoginService.getCurrentUser()
+    if (firebaseUser != null) {
+        usuarioService.obtener(firebaseUser.uid) { usuario ->
+            if (usuario != null) {
+                currentUser = usuario
+                println("Usuario actual: ${currentUser?.nombres}")
+                // Aquí ya puedes usar currentUser
+            } else {
+                println("Usuario no encontrado")
+            }
+        }
+    } else {
+        println("No hay usuario autenticado")
+    }
+
 
 
     Scaffold(
@@ -64,9 +85,9 @@ fun SettingsScreen(navController: NavController) {
                 modifier = Modifier.size(110.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (user.fotoPath.isNotEmpty()) {
+                if (currentUser?.fotoPath?.isNotEmpty() ?: false) {
                     AsyncImage(
-                        model = File(user.fotoPath),
+                        model = File(currentUser?.fotoPath),
                         contentDescription = null,
                         modifier = Modifier
                             .size(110.dp)
@@ -86,7 +107,7 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${user.nombres} ${user.apellidos}",
+                text = "${currentUser?.nombres} ${currentUser?.apellidos}",
                 fontSize = 16.sp
             )
 
