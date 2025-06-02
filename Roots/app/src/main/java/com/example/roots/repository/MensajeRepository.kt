@@ -8,20 +8,20 @@ class MensajeRepository {
     private val collection = db.collection("mensajes")
 
     fun add(mensaje: Mensaje) {
-        collection.document(mensaje.id.toString()).set(mensaje)
+        collection.document(mensaje.id).set(mensaje)
     }
 
-    fun get(id: Int, onResult: (Mensaje?) -> Unit) {
-        collection.document(id.toString()).get().addOnSuccessListener {
+    fun get(id: String, onResult: (Mensaje?) -> Unit) {
+        collection.document(id).get().addOnSuccessListener {
             onResult(it.toObject(Mensaje::class.java))
         }
     }
 
     fun update(mensaje: Mensaje) {
-        collection.document(mensaje.id.toString()).set(mensaje)
+        collection.document(mensaje.id).set(mensaje)
     }
 
-    fun delete(id: Int) {
-        collection.document(id.toString()).delete()
+    fun delete(id: String) {
+        collection.document(id).delete()
     }
 }

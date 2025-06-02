@@ -11,7 +11,7 @@ class SuscripcionRepository {
         collection.document(suscripcion.id.toString()).set(suscripcion)
     }
 
-    fun get(id: Int, onResult: (Suscripcion?) -> Unit) {
+    fun get(id: String, onResult: (Suscripcion?) -> Unit) {
         collection.document(id.toString()).get().addOnSuccessListener {
             onResult(it.toObject(Suscripcion::class.java))
         }
@@ -21,7 +21,7 @@ class SuscripcionRepository {
         collection.document(suscripcion.id.toString()).set(suscripcion)
     }
 
-    fun delete(id: Int) {
+    fun delete(id: String) {
         collection.document(id.toString()).delete()
     }
 }
