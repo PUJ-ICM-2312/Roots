@@ -5,7 +5,7 @@ import com.example.roots.repository.PlanRepository
 
 class PlanService(private val repo: PlanRepository) {
     fun crear(plan: Plan) = repo.add(plan)
-    fun obtener(id: Int, onResult: (Plan?) -> Unit) = repo.get(id, onResult)
+    fun obtener(id: String, onResult: (Plan?) -> Unit) = repo.get(id, onResult)
     fun actualizar(plan: Plan) = repo.update(plan)
-    fun eliminar(id: Int) = repo.delete(id)
+    fun eliminar(id: String) = repo.delete(id)
 }

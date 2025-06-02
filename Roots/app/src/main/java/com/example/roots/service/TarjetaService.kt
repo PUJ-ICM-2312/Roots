@@ -5,7 +5,7 @@ import com.example.roots.repository.TarjetaRepository
 
 class TarjetaService(private val repo: TarjetaRepository) {
     fun crear(tarjeta: Tarjeta) = repo.add(tarjeta)
-    fun obtener(id: Int, onResult: (Tarjeta?) -> Unit) = repo.get(id, onResult)
+    fun obtener(id: String, onResult: (Tarjeta?) -> Unit) = repo.get(id, onResult)
     fun actualizar(tarjeta: Tarjeta) = repo.update(tarjeta)
-    fun eliminar(id: Int) = repo.delete(id)
+    fun eliminar(id: String) = repo.delete(id)
 }

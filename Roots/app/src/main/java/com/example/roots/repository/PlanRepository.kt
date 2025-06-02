@@ -11,7 +11,7 @@ class PlanRepository {
         collection.document(plan.id.toString()).set(plan)
     }
 
-    fun get(id: Int, onResult: (Plan?) -> Unit) {
+    fun get(id: String, onResult: (Plan?) -> Unit) {
         collection.document(id.toString()).get().addOnSuccessListener {
             onResult(it.toObject(Plan::class.java))
         }
@@ -21,7 +21,7 @@ class PlanRepository {
         collection.document(plan.id.toString()).set(plan)
     }
 
-    fun delete(id: Int) {
+    fun delete(id: String) {
         collection.document(id.toString()).delete()
     }
 }

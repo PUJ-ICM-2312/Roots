@@ -11,7 +11,7 @@ class TarjetaRepository {
         collection.document(tarjeta.id.toString()).set(tarjeta)
     }
 
-    fun get(id: Int, onResult: (Tarjeta?) -> Unit) {
+    fun get(id: String, onResult: (Tarjeta?) -> Unit) {
         collection.document(id.toString()).get().addOnSuccessListener {
             onResult(it.toObject(Tarjeta::class.java))
         }
@@ -21,7 +21,7 @@ class TarjetaRepository {
         collection.document(tarjeta.id.toString()).set(tarjeta)
     }
 
-    fun delete(id: Int) {
+    fun delete(id: String) {
         collection.document(id.toString()).delete()
     }
 }

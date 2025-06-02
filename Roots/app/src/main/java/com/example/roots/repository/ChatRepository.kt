@@ -11,7 +11,7 @@ class ChatRepository {
         collection.document(chat.id.toString()).set(chat)
     }
 
-    fun get(id: Int, onResult: (Chat?) -> Unit) {
+    fun get(id: String, onResult: (Chat?) -> Unit) {
         collection.document(id.toString()).get().addOnSuccessListener {
             onResult(it.toObject(Chat::class.java))
         }
@@ -21,7 +21,7 @@ class ChatRepository {
         collection.document(chat.id.toString()).set(chat)
     }
 
-    fun delete(id: Int) {
+    fun delete(id: String) {
         collection.document(id.toString()).delete()
     }
 }
