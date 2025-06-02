@@ -210,7 +210,7 @@ fun PropertyMap(inmueble: Inmueble) {
 
                     // Reemplaza "YOUR_API_KEY" por tu clave de Directions API
                     val url =
-                        "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=YOUR_API_KEY"
+                        "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=AIzaSyDKjhqaBtcvLF4zW_VsHkXZYi3y4lCWeh0"
                     val client = okhttp3.OkHttpClient()
                     val request = okhttp3.Request.Builder().url(url).build()
 
