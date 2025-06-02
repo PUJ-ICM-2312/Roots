@@ -1,5 +1,8 @@
 package com.example.roots.model
 
+import com.google.firebase.firestore.IgnoreExtraProperties
+
+@IgnoreExtraProperties
 data class Mensaje(
     val id: String = "",
     val idChat: String = "",
