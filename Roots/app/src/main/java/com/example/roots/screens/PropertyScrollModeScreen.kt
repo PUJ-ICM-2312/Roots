@@ -2,6 +2,7 @@ package com.example.roots.screens
 
 import android.location.Location
 import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -49,8 +50,11 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.repository.InmuebleRepository
+import com.example.roots.service.ChatService
 import com.example.roots.ui.theme.RootsTheme
+import com.google.firebase.auth.FirebaseAuth
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -103,7 +107,7 @@ fun PropertyScrollModeScreen(
             PropertyDescription(item)
             PropertyLocation(item)
             PropertyMap(item)
-            ContactButton(item)
+            ContactButton(navController = navController, inmueble = item)
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
@@ -289,7 +293,16 @@ fun PropertyMap(inmueble: Inmueble) {
 }
 
 @Composable
-fun ContactButton(inmueble: Inmueble) {
+fun ContactButton(
+    navController: NavController,
+    inmueble: Inmueble
+) {
+    val context = LocalContext.current
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+    if (currentUserId.isNullOrBlank()) return
+
+    val chatService = remember { ChatService() }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -297,7 +310,32 @@ fun ContactButton(inmueble: Inmueble) {
         contentAlignment = Alignment.Center
     ) {
         Button(
-            onClick = { /* TODO: Contactar al dueño */ },
+            onClick = {
+                // Dueño del inmueble
+                val ownerUserId = inmueble.usuarioId
+                // Primera foto como thumbnail (o cadena vacía si no hay)
+                val fotoThumbnail = inmueble.fotos.firstOrNull().orEmpty()
+                // Barrio del inmueble
+                val barrio = inmueble.barrio
+
+                chatService.createOrGetChat(
+                    currentUserId = currentUserId,
+                    ownerUserId = ownerUserId,
+                    propertyId = inmueble.id,
+                    propertyFoto = fotoThumbnail,
+                    propertyBarrio = barrio
+                ) { chatId ->
+                    if (chatId != null) {
+                        navController.navigate("chat_room/$chatId")
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "No se pudo iniciar el chat. Intenta más tarde.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFD5FDE5),
                 contentColor = Color.Black
@@ -318,6 +356,7 @@ fun PropertyFeature(icon: ImageVector, label: String) {
         Text(text = label)
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
@@ -360,7 +399,7 @@ fun PreviewPropertyScrollMode() {
             PropertyDescription(dummy)
             PropertyLocation(dummy)
             PropertyMap(dummy)
-            ContactButton(dummy)
+            ContactButton(navController = rememberNavController(), inmueble = dummy)
             Spacer(modifier = Modifier.height(80.dp))
         }
     }

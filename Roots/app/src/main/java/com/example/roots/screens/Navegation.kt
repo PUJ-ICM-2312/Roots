@@ -29,7 +29,6 @@ fun NavigationStack() {
     val screens = listOf(
         Screen.Swipe,
         Screen.AddProperty,
-        Screen.Chat,
         Screen.ConfirmSubscription,
         Screen.Messages,
         Screen.MyProperties,
@@ -87,7 +86,6 @@ fun NavigationStack() {
                 composable(Screen.SignUp.route) { SignUpScreen(navController) }
                 composable(Screen.Swipe.route) { SwipeROOTS(navController) }
                 composable(Screen.AddProperty.route) { AddPropertyScreen(navController) }
-                composable(Screen.Chat.route) { ChatScreen(navController) }
                 composable(Screen.ConfirmSubscription.route) { ConfirmSubscriptionScreen(navController) }
                 composable(Screen.Messages.route) { MessagesScreen(navController) }
                 composable(Screen.MyProperties.route) { MyPropertiesScreen(navController) }
@@ -115,6 +113,18 @@ fun NavigationStack() {
                         propertyId = propertyId  // ahora es String
                     )
 
+                }
+                composable(
+                    route = "chat_room/{chatId}",
+                    arguments = listOf(
+                        navArgument("chatId") { type = NavType.StringType }
+                    )
+                ) { backStack ->
+                    val chatId = backStack.arguments?.getString("chatId") ?: ""
+                    ChatScreen(
+                        navController = navController,
+                        chatId = chatId
+                    )
                 }
             }
         }
