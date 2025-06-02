@@ -24,7 +24,7 @@ import com.example.roots.ui.theme.RootsTheme
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.data.InmuebleRepository
-import com.example.roots.model.Inmueble
+import com.example.roots.model.`Inmueble.kt`
 import coil.compose.AsyncImage
 import androidx.compose.foundation.clickable
 import com.example.roots.components.BottomNavBar
@@ -32,7 +32,7 @@ import com.example.roots.components.BottomNavBar
 
 @Composable
 fun MyPropertiesScreen(navController: NavController) {
-    val properties = InmuebleRepository.inmuebles
+    val properties = InmuebleRepository.`inmueble.kts`
 
     Scaffold(bottomBar = { BottomNavBar(navController) }) {
         Column(
@@ -72,7 +72,7 @@ fun MyPropertiesScreen(navController: NavController) {
 
 @Composable
 fun PropertyGrid(
-    properties: List<Inmueble>,
+    properties: List<`Inmueble.kt`>,
     navController: NavController
 ) {
   /*  val properties = listOf(
@@ -93,13 +93,13 @@ fun PropertyGrid(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 PropertyCard(
-                    inmueble      = properties[i],
+                    `inmueble.kt`      = properties[i],
                     navController = navController,
                     modifier      = Modifier.weight(1f)
                 )
                 if (i + 1 < properties.size) {
                     PropertyCard(
-                        inmueble      = properties[i + 1],
+                        `inmueble.kt`      = properties[i + 1],
                         navController = navController,
                         modifier      = Modifier.weight(1f)
                     )
@@ -114,7 +114,7 @@ fun PropertyGrid(
 
 @Composable
 fun PropertyCard(
-    inmueble: Inmueble,
+    `inmueble.kt`: `Inmueble.kt`,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -123,7 +123,7 @@ fun PropertyCard(
             .height(160.dp)
             .clickable {
                 // NAVEGA al detalle pasando el ID
-                navController.navigate("property_scroll_mode/${inmueble.id}")
+                navController.navigate("property_scroll_mode/${`inmueble.kt`.id}")
             },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
@@ -131,13 +131,13 @@ fun PropertyCard(
         Box {
             // Carga la primera foto; si es Int (recurso) o String (URL), AsyncImage lo maneja
             AsyncImage(
-                model              = inmueble.fotos.first(),
+                model              = `inmueble.kt`.fotos.first(),
                 contentDescription = null,
                 contentScale       = ContentScale.Crop,
                 modifier           = Modifier.fillMaxSize()
             )
             Text(
-                text = "${inmueble.barrio} • ${inmueble.metrosCuadrados.toInt()} m²",
+                text = "${`inmueble.kt`.barrio} • ${`inmueble.kt`.metrosCuadrados.toInt()} m²",
                 color = Color.White,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,

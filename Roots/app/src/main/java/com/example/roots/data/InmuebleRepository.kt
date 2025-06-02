@@ -1,23 +1,23 @@
 package com.example.roots.data
 
 import androidx.compose.runtime.mutableStateListOf
-import com.example.roots.model.Inmueble
+import com.example.roots.model.`Inmueble.kt`
 
 object InmuebleRepository {
     // Estado observable para Compose
-    private val _inmuebles = mutableStateListOf<Inmueble>().apply {
+    private val `_inmueble.kts` = mutableStateListOf<`Inmueble.kt`>().apply {
         addAll(MockInmuebles.sample)   // tu lista inicial de mocks
     }
 
     // Lectura pública
-    val inmuebles: List<Inmueble> get() = _inmuebles
+    val `inmueble.kts`: List<`Inmueble.kt`> get() = `_inmueble.kts`
 
     // Agrega uno nuevo
-    fun add(inm: Inmueble) {
-        _inmuebles.add(inm)
+    fun add(inm: `Inmueble.kt`) {
+        `_inmueble.kts`.add(inm)
     }
 
     // Genera un nuevo ID incremental
     fun nextId(): Int =
-        (_inmuebles.maxOfOrNull { it.id } ?: 0) + 1
+        (`_inmueble.kts`.maxOfOrNull { it.id } ?: 0) + 1
 }

@@ -21,7 +21,7 @@ import com.example.roots.screens.PropertyGrid
 
 @Composable
 fun FavoritesScreen(navController: NavController) {
-    val favoritos = InmuebleRepository.inmuebles
+    val favoritos = InmuebleRepository.`inmueble.kts`
         .filter { it.numFavoritos > 0 }
     Scaffold(
         bottomBar = { BottomNavBar(navController) }

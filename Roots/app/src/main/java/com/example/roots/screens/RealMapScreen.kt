@@ -40,7 +40,7 @@ import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.example.roots.data.MockInmuebles
-import com.example.roots.model.Inmueble
+import com.example.roots.model.`Inmueble.kt`
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.AutocompletePrediction
@@ -62,7 +62,7 @@ fun RealMapScreen(navController: NavController) {
     val context = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
-    val inmuebles = InmuebleRepository.inmuebles
+    val inmuebles = InmuebleRepository.`inmueble.kts`
 
 
     var userLocation by remember { mutableStateOf<LatLng?>(null) }

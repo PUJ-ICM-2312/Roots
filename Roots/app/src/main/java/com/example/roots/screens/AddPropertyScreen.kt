@@ -35,7 +35,7 @@ import com.example.roots.R
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.components.BottomNavBar
-import com.example.roots.model.Inmueble
+import com.example.roots.model.`Inmueble.kt`
 import com.example.roots.model.TipoInmueble
 import com.example.roots.model.TipoPublicacion
 import com.example.roots.ui.theme.RootsTheme
@@ -294,7 +294,7 @@ fun AddPropertyScreen(navController: NavController) {
                         Toast.makeText(context, "Primero busca la ubicación", Toast.LENGTH_SHORT).show()
                     } else {
                         // Aquí creas y agregas tu Inmueble usando InmuebleRepository.nextId(), path de fotos, etc.
-                        val nuevo = Inmueble(
+                        val nuevo = `Inmueble.kt`(
                             id                         = InmuebleRepository.nextId(),
                             direccion                  = direccion,
                             precio                     = precio.toFloatOrNull()?:0f,

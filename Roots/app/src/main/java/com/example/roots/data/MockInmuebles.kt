@@ -1,6 +1,6 @@
 package com.example.roots.data
 
-import com.example.roots.model.Inmueble
+import com.example.roots.model.`Inmueble.kt`
 import com.example.roots.model.TipoInmueble
 import com.example.roots.model.TipoPublicacion
 import com.example.roots.R
@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 
 object MockInmuebles {
     val sample = listOf(
-        Inmueble(
+        `Inmueble.kt`(
             id = 1,
             direccion = "Cra 50 #20-30",
             precio = 350_000_000f,
@@ -34,7 +34,7 @@ object MockInmuebles {
             latitud = 4.654321,
             longitud = -74.056789
         ),
-        Inmueble(
+        `Inmueble.kt`(
             id = 2,
             direccion = "Cl 85 #15-10, Bogotá",
             precio = 450_000_000f,
@@ -60,7 +60,7 @@ object MockInmuebles {
             latitud = 4.679012,
             longitud = -74.073456
         ),
-        Inmueble(
+        `Inmueble.kt`(
             id                         = 3,
             direccion                  = "Cra 7 #112-25",
             precio                     = 480_000_000f,
@@ -87,7 +87,7 @@ object MockInmuebles {
             longitud                   = -74.0383
         ),
 
-        Inmueble(
+        `Inmueble.kt`(
             id                         = 4,
             direccion                  = "Cl 85 #20-50",
             precio                     = 3_200_000f,
@@ -114,7 +114,7 @@ object MockInmuebles {
             longitud                   = -74.0554
         ),
 
-        Inmueble(
+        `Inmueble.kt`(
             id                         = 5,
             direccion                  = "Av El Dorado #30-15",
             precio                     = 650_000_000f,
@@ -141,7 +141,7 @@ object MockInmuebles {
             longitud                   = -74.0895
         ),
 
-        Inmueble(
+        `Inmueble.kt`(
             id                         = 6,
             direccion                  = "Cll 140 #10-20",
             precio                     = 250_000_000f,
@@ -168,7 +168,7 @@ object MockInmuebles {
             longitud                   = -74.0931
         ),
 
-        Inmueble(
+        `Inmueble.kt`(
             id                         = 7,
             direccion                  = "Av de Las Américas #68-40",
             precio                     = 1_800_000f,
