@@ -20,7 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
+import com.example.roots.model.Usuario
+import com.example.roots.repository.UsuarioRepository
+import com.example.roots.service.LoginService
 import com.example.roots.service.SecureStorage
+import com.example.roots.service.UsuarioService
 import com.example.roots.service.showBiometricPrompt
 //import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
@@ -29,11 +33,15 @@ import com.google.firebase.auth.FirebaseAuth
 fun SignUpScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = remember { FirebaseAuth.getInstance() }
-    var username by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+
+    val usuarioRepository = UsuarioRepository()
+    val usuarioService = UsuarioService(usuarioRepository)
 
     Column(
         modifier = Modifier
@@ -56,9 +64,17 @@ fun SignUpScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("com.example.roots.model.Usuario") },
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Nombre") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = lastName,
+                onValueChange = { lastName = it },
+                label = { Text("Apellido") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -119,7 +135,18 @@ fun SignUpScreen(navController: NavController) {
                                         navController.navigate(Screen.Login.route)
                                     }
                                 )
-                            } else {
+
+                                usuarioService.crear(
+                                    Usuario(
+                                        id = LoginService.getCurrentUser()?.uid ?: "",
+                                        nombres = name,
+                                        apellidos = lastName,
+                                        correo = email
+                                        )
+                                )
+                            }
+
+                            else {
                                 val errorMsg = task.exception?.message ?: "Error desconocido"
                                 Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
                             }
