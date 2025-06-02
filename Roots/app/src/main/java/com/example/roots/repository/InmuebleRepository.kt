@@ -52,4 +52,12 @@ class InmuebleRepository {
             .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { onResult(false) }
     }
+
+    fun getAll(onResult: (List<Inmueble>) -> Unit) {
+        collection.get().addOnSuccessListener { result ->
+            val list = result.mapNotNull { it.toObject(Inmueble::class.java) }
+            onResult(list)
+        }
+    }
+
 }
