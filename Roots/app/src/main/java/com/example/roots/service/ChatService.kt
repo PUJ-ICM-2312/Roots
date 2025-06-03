@@ -93,6 +93,7 @@ class ChatService(
             "vistoPor.${mensaje.idEmisor}" to true
         )
 
+
         chatDoc.update(updateData)
             .addOnFailureListener { /* ignoramos error de update parcial */ }
 
