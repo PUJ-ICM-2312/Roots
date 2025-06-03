@@ -115,17 +115,21 @@ fun NavigationStack() {
 
                 }
                 composable(
-                    route = "chat_room/{chatId}",
+                    route = "chat_room/{chatId}/{receptorId}",
                     arguments = listOf(
-                        navArgument("chatId") { type = NavType.StringType }
+                        navArgument("chatId") { type = NavType.StringType },
+                        navArgument("receptorId") { type = NavType.StringType }
                     )
                 ) { backStack ->
                     val chatId = backStack.arguments?.getString("chatId") ?: ""
+                    val receptorId = backStack.arguments?.getString("receptorId") ?: ""
                     ChatScreen(
                         navController = navController,
-                        chatId = chatId
+                        chatId = chatId,
+                        receptorId = receptorId
                     )
                 }
+
             }
         }
     }

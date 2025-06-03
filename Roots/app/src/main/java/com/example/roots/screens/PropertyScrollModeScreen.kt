@@ -55,6 +55,8 @@ import com.example.roots.repository.InmuebleRepository
 import com.example.roots.service.ChatService
 import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -311,11 +313,8 @@ fun ContactButton(
     ) {
         Button(
             onClick = {
-                // Dueño del inmueble
                 val ownerUserId = inmueble.usuarioId
-                // Primera foto como thumbnail (o cadena vacía si no hay)
                 val fotoThumbnail = inmueble.fotos.firstOrNull().orEmpty()
-                // Barrio del inmueble
                 val barrio = inmueble.barrio
 
                 chatService.createOrGetChat(
@@ -326,7 +325,23 @@ fun ContactButton(
                     propertyBarrio = barrio
                 ) { chatId ->
                     if (chatId != null) {
-                        navController.navigate("chat_room/$chatId")
+                        // 🔁 Ahora sí: obtener el documento y extraer participantes
+                        FirebaseFirestore.getInstance().collection("chats").document(chatId)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                val participantes = doc.get("participantes") as? List<String>
+                                val receptorId = participantes?.firstOrNull { it != currentUserId }
+                                if (receptorId != null) {
+                                    navController.navigate("chat_room/$chatId/$receptorId")
+                                } else {
+                                    Toast.makeText(context, "No se pudo identificar el receptor", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Error al obtener chat", Toast.LENGTH_SHORT).show()
+                            }
+
                     } else {
                         Toast.makeText(
                             context,
@@ -348,6 +363,7 @@ fun ContactButton(
         }
     }
 }
+
 
 @Composable
 fun PropertyFeature(icon: ImageVector, label: String) {

@@ -90,7 +90,12 @@ class ChatService(
         val updateData = mapOf(
             "ultimoMensaje" to mensaje.contenido,
             "timestampUltimoMensaje" to mensaje.timestamp,
-            "vistoPor.${mensaje.idEmisor}" to true
+            "vistoPor" to mapOf(
+                mensaje.idEmisor to true,
+                // El otro usuario (receptor) a false:
+                mensaje.idReceptor to false
+            )
+
         )
 
 

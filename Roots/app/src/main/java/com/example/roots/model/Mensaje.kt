@@ -9,5 +9,7 @@ data class Mensaje(
     val idEmisor: String = "",
     val contenido: String = "",
     val timestamp: Long = 0L,
-    val leidoPor: List<String> = emptyList()
+    val leidoPor: List<String> = emptyList(),
+    val idReceptor: String = ""
+
 )
