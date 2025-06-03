@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,7 +35,7 @@ import com.example.roots.repository.UsuarioRepository
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
-import java.io.File
+import com.google.firebase.auth.FirebaseAuth
 
 val usuarioRepository = UsuarioRepository()
 val usuarioService = UsuarioService(usuarioRepository)
@@ -139,6 +140,28 @@ fun SettingsScreen(navController: NavController) {
             SettingsButton(Icons.Default.Star, "Obtén Roots Premium") {
                 navController.navigate("plans")
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Botón de Logout
+            Button(
+                onClick = {
+                    FirebaseAuth.getInstance().signOut()
+                    Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFE0E0)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = "Cerrar sesión", tint = Color.Black)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(text = "Cerrar sesión", color = Color.Black)
+            }
         }
     }
 }
@@ -162,6 +185,7 @@ private fun SettingsButton(
         Text(text = text, color = Color.Black)
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewSettings() {
