@@ -1,5 +1,7 @@
 package com.example.roots.screens
 
+import com.example.roots.service.NotificationUtils
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -36,6 +38,7 @@ fun ChatScreen(
 {
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val chatService = remember { ChatService() }
+    val context = LocalContext.current
     LaunchedEffect(chatId, currentUserId) {
         chatService.marcarComoLeido(chatId, currentUserId)
     }
@@ -49,11 +52,32 @@ fun ChatScreen(
         chatService.getMessagesOfChat(chatId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) return@addSnapshotListener
-                val lista = snapshot?.documents?.mapNotNull { doc ->
-                    val msg = doc.toObject(Mensaje::class.java)
-                    msg?.copy(id = doc.id, idChat = chatId)
+
+                // 🔔--- detectar SOLO los documentos recién añadidos
+                val nuevos = snapshot?.documentChanges
+                    ?.filter { it.type == com.google.firebase.firestore.DocumentChange.Type.ADDED }
+                    ?.mapNotNull { dc ->
+                        dc.document.toObject(Mensaje::class.java)
+                            ?.copy(id = dc.document.id, idChat = chatId)
+                    } ?: emptyList()
+
+                // 🔔--- notificar si lo envió otro usuario
+                nuevos.forEach { msg ->
+                    if (msg.idEmisor != currentUserId) {
+                        NotificationUtils.showNewMessageNotification(
+                            context     = context,
+                            senderName  = "Nuevo mensaje",
+                            messageText = msg.contenido,
+                            chatId      = chatId,
+                            receptorId  = receptorId      // o msg.idEmisor si prefieres
+                        )
+                    }
+                }
+
+                // lista completa para la UI
+                mensajes = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(Mensaje::class.java)?.copy(id = doc.id, idChat = chatId)
                 } ?: emptyList()
-                mensajes = lista
             }
     }
 
