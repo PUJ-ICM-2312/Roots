@@ -40,6 +40,8 @@
     import java.util.Locale
     import android.util.Log
     import androidx.compose.foundation.shape.CircleShape
+    import com.example.roots.components.BottomNavBar
+
 
     @SuppressLint("UnrememberedMutableState")
     @Composable
@@ -128,10 +130,15 @@
                         text = { Text("Mis mensajes enviados") }
                     )
                 }
+            },
+            bottomBar = {
+                BottomNavBar(navController)  // <- AÑADE ESTO
+
             }
         ) { innerPadding ->
 
-            Column(
+
+        Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
