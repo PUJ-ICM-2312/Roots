@@ -87,6 +87,7 @@ fun ChatScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
             items(mensajes) { msg ->
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
