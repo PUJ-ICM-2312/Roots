@@ -52,6 +52,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.example.roots.model.Inmueble
+import com.example.roots.model.Usuario
+import com.example.roots.repository.UsuarioRepository
+import com.example.roots.service.UsuarioService
 
 
 @SuppressLint("MissingPermission")
@@ -65,6 +68,15 @@ fun RealMapScreen(navController: NavController) {
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     // Dentro de RealMapScreen, justo antes del GoogleMap:
     val inmuebles = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
+    var currentUser by remember { mutableStateOf<Usuario?>(null) }
+
+    val firebaseUser = remember {
+        com.google.firebase.auth.FirebaseAuth
+            .getInstance()
+            .currentUser
+    }
+
+    val usuarioService = remember { UsuarioService(UsuarioRepository()) }
 
     LaunchedEffect(Unit) {
         InmuebleRepository().getAll { list ->
@@ -72,7 +84,7 @@ fun RealMapScreen(navController: NavController) {
         }
     }
 
-
+    var showCompleteProfileDialog by remember { mutableStateOf(false) }
     var userLocation by remember { mutableStateOf<LatLng?>(null) }
     var hasCentered by remember { mutableStateOf(false) }
     var compassEnabled by remember { mutableStateOf(false) }
@@ -143,7 +155,11 @@ fun RealMapScreen(navController: NavController) {
         }
 
         if (compassEnabled) {
-            sensorManager.registerListener(listener, rotationVectorSensor, SensorManager.SENSOR_DELAY_UI)
+            sensorManager.registerListener(
+                listener,
+                rotationVectorSensor,
+                SensorManager.SENSOR_DELAY_UI
+            )
         }
 
         onDispose {
@@ -151,14 +167,54 @@ fun RealMapScreen(navController: NavController) {
         }
     }
 
-    /*val markers = listOf(
-        LatLng(4.6275, -74.0638) to "Apartamento cerca de la Cl. 40a",
-        LatLng(4.6281, -74.0643) to "Casa amplia en Chapinero",
-        LatLng(4.6268, -74.0625) to "Estudio en edificio moderno",
-        LatLng(4.6259, -74.0651) to "Apartamento con vista a parque",
-        LatLng(4.6290, -74.0620) to "Penthouse en zona exclusiva",
-        LatLng(4.6245, -74.0640) to "Habitación económica cerca de transporte"
-    )*/
+    LaunchedEffect(firebaseUser?.uid) {
+        firebaseUser?.uid?.let { uid ->
+            usuarioService.obtener(uid) { usuario ->
+                if (usuario != null) {
+                    currentUser = usuario
+
+                    // 4.1) Comprobamos si faltan datos esenciales
+                    val faltanCampos =
+                        usuario.celular.isBlank() ||
+                                usuario.cedula.isBlank() ||
+                                usuario.fotoPath.isBlank()
+
+                    if (faltanCampos) {
+                        showCompleteProfileDialog = true
+                    }
+                }
+            }
+        }
+    }
+
+    if (showCompleteProfileDialog) {
+        AlertDialog(
+            onDismissRequest = { showCompleteProfileDialog = false },
+            title = { Text("¡Termina tu registro!") },
+            text = {
+                Text(
+                    "Para aprovechar todas las funcionalidades de la app,\n" +
+                            "te invitamos a completar tu perfil.\n\n" +
+                            "¿Deseas ir ahora a “Editar perfil”?"
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCompleteProfileDialog = false
+                    navController.navigate("edit_profile")
+                }) {
+                    Text("Completar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showCompleteProfileDialog = false
+                }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) },
