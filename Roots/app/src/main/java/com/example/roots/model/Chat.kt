@@ -12,5 +12,7 @@ data class Chat(
 
     val fechaCreacion: Long = 0L,
     val ultimoMensaje: String = "",
-    val timestampUltimoMensaje: Long = 0L
+    val timestampUltimoMensaje: Long = 0L,
+    val vistoPor: Map<String, Boolean> = emptyMap()  // 👈 este campo nuevo
+
 )

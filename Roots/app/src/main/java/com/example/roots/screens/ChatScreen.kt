@@ -103,9 +103,10 @@ fun ChatScreen(
                             timestamp = System.currentTimeMillis(),
                             leidoPor = listOf(currentUserId)
                         )
-                        chatService.sendMessage(chatId, mensaje) { success ->
+                        chatService.sendMessage(chatId, mensaje, remitenteId = currentUserId) { success ->
                             if (success) nuevoTexto = ""
                         }
+
                     }
                 }
             ) {
