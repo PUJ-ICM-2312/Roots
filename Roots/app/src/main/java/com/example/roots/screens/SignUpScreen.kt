@@ -120,33 +120,49 @@ fun SignUpScreen(navController: NavController) {
                         .addOnCompleteListener { task ->
                             isLoading = false
                             if (task.isSuccessful) {
-                                Toast.makeText(context, "com.example.roots.model.Usuario registrado correctamente", Toast.LENGTH_LONG).show()
+                                // El usuario se creó en FirebaseAuth
+                                val uid = task.result?.user?.uid ?: ""
+                                if (uid.isBlank()) {
+                                    Toast.makeText(context, "Error al obtener UID", Toast.LENGTH_LONG).show()
+                                    return@addOnCompleteListener
+                                }
 
-                                // Mostrar autenticación biométrica
-                                showBiometricPrompt(
-                                    context = context,
-                                    onAuthSuccess = {
-                                        SecureStorage.saveCredentials(context, email, password)
-                                        Toast.makeText(context, "Huella registrada y login guardado", Toast.LENGTH_SHORT).show()
-                                        navController.navigate(Screen.Login.route)
-                                    },
-                                    onAuthError = {
-                                        Toast.makeText(context, "Registro exitoso pero falló la huella", Toast.LENGTH_SHORT).show()
-                                        navController.navigate(Screen.Login.route)
-                                    }
+                                // 1) Creamos el objeto Usuario con todos los campos
+                                val nuevoUsuario = Usuario(
+                                    id = uid,
+                                    nombres = name,
+                                    apellidos = lastName,
+                                    correo = email,
+                                    fotoPath = "",    // inicialmente vacío
+                                    celular = "",     // inicialmente vacío
+                                    cedula = ""       // inicialmente vacío
                                 )
 
-                                usuarioService.crear(
-                                    Usuario(
-                                        id = LoginService.getCurrentUser()?.uid ?: "",
-                                        nombres = name,
-                                        apellidos = lastName,
-                                        correo = email
+                                // 2) Guardamos en Firestore (colección "usuarios")
+                                usuarioService.crear(nuevoUsuario) { successCrear ->
+                                    if (successCrear) {
+                                        // 3) Mostramos autenticación biométrica
+                                        showBiometricPrompt(
+                                            context = context,
+                                            onAuthSuccess = {
+                                                SecureStorage.saveCredentials(context, email, password)
+                                                Toast.makeText(context, "Huella registrada y login guardado", Toast.LENGTH_SHORT).show()
+                                                navController.navigate("login") {
+                                                    popUpTo("signup") { inclusive = true }
+                                                }
+                                            },
+                                            onAuthError = {
+                                                Toast.makeText(context, "Registro exitoso pero falló la huella", Toast.LENGTH_SHORT).show()
+                                                navController.navigate("login") {
+                                                    popUpTo("signup") { inclusive = true }
+                                                }
+                                            }
                                         )
-                                )
-                            }
-
-                            else {
+                                    } else {
+                                        Toast.makeText(context, "Error al guardar usuario en Firestore", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            } else {
                                 val errorMsg = task.exception?.message ?: "Error desconocido"
                                 Toast.makeText(context, "Error: $errorMsg", Toast.LENGTH_LONG).show()
                             }
@@ -198,3 +214,8 @@ fun SignUpScreen(navController: NavController) {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun PreviewSignUp() {
+    SignUpScreen(navController = rememberNavController())
+}
