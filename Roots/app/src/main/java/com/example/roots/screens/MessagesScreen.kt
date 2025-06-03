@@ -133,6 +133,7 @@
             },
             bottomBar = {
                 BottomNavBar(navController)  // <- AÑADE ESTO
+
             }
         ) { innerPadding ->
 
