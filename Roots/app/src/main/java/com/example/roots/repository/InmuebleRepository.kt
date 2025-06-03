@@ -47,6 +47,10 @@ class InmuebleRepository {
     }
 
     fun delete(id: String, onResult: (Boolean) -> Unit) {
+        if (id.isBlank()) {
+            onResult(false)
+            return
+        }
         collection.document(id)
             .delete()
             .addOnSuccessListener { onResult(true) }
