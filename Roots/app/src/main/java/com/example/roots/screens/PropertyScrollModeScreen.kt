@@ -118,9 +118,7 @@ fun PropertyScrollModeScreen(
             PropertyLocation(item)
             PropertyMap(item)
 
-            EditPropertyButton(navController = navController, inmueble = item)
-            ContactAndLikeButtons(navController = navController, inmueble = item)
-
+            EditAndDeleteButtons(navController = navController, inmueble = item, inmuebleService = InmuebleService(InmuebleRepository()))
 
             // ——————————————
             // Aquí agregamos la caja (Box) que contendrá los botones,
@@ -138,7 +136,6 @@ fun PropertyScrollModeScreen(
         }
     }
 }
-
 
 @Composable
 fun ImageCarousel(inmueble: Inmueble) {
@@ -198,6 +195,33 @@ fun PropertyHeaderInfo(inmueble: Inmueble) {
             PropertyFeature(Icons.Default.SquareFoot, "${inmueble.metrosCuadrados} m²")
             PropertyFeature(Icons.Default.DirectionsCar, "${inmueble.numParqueaderos} Parqueaderos")
         }
+
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserId == inmueble.usuarioId) {
+            Spacer(modifier = Modifier.height(12.dp))
+            // Asumimos que tu modelo Inmueble tiene un campo `numLikes: Int`
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Likes",
+                    tint = Color.Red,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = inmueble.numFavoritos.toString(),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+        }
+
     }
 }
 
@@ -538,7 +562,7 @@ fun PreviewPropertyScrollMode() {
             PropertyLocation(dummy)
             PropertyMap(dummy)
             ContactAndLikeButtons(navController = rememberNavController(), inmueble = dummy)
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(50.dp))
         }
     }
 }
@@ -579,38 +603,164 @@ fun decodePolyline(encoded: String): List<LatLng> {
 }
 
 @Composable
-fun EditPropertyButton(
+fun EditAndDeleteButtons(
     navController: NavController,
-    inmueble: Inmueble
+    inmueble: Inmueble,
+    inmuebleService: InmuebleService  // inyecta tu servicio por parámetro
 ) {
-    // 1) Obtenemos el UID del usuario autenticado
+    // 1) UID del usuario actual (si no hay, no mostramos nada)
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-        ?: return  // Si no hay usuario autenticado, no mostramos nada
+        ?: return
+    val context = LocalContext.current
 
-    // 2) Comprobamos si el inmueble pertenece al usuario actual
+    // 2) Solo mostramos los botones si el inmueble pertenece a este UID
     if (inmueble.usuarioId == currentUserId) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Button(
-                onClick = {
-                    // Navegamos a la pantalla de edición, pasándole el ID del inmueble
-                    navController.navigate("edit_property/${inmueble.id}")
+        // Control para el diálogo de confirmación de eliminación
+        var showDeleteDialog by remember { mutableStateOf(false) }
+        // Control para saber si ya estamos en proceso de borrado
+        var isDeleting by remember { mutableStateOf(false) }
+
+        // 3) Si el usuario pulsó “Eliminar”, mostramos el AlertDialog
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Confirmar eliminación") },
+                text = { Text("¿Seguro que deseas eliminar este inmueble? Esta acción no se puede deshacer.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        isDeleting = true
+
+                        // 4) Llamamos al servicio para borrar el inmueble
+                        inmuebleService.eliminar(inmueble.id) { success ->
+                            isDeleting = false
+                            if (success) {
+                                // —————— A PARTIR DE AQUÍ, BORRAMOS TAMBIÉN LAS REFERENCIAS EN FAVORITOS ——————
+                                val db = FirebaseFirestore.getInstance()
+                                // 1) Obtenemos todos los usuarios
+                                db.collection("usuarios")
+                                    .get()
+                                    .addOnSuccessListener { snapshot ->
+                                        val batch = db.batch()
+                                        for (userDoc in snapshot.documents) {
+                                            val uid = userDoc.id
+                                            // Para cada usuario, apuntamos a: /usuarios/{uid}/favoritos/{inmueble.id}
+                                            val favRef = db
+                                                .collection("usuarios")
+                                                .document(uid)
+                                                .collection("favoritos")
+                                                .document(inmueble.id)
+                                            batch.delete(favRef)
+                                        }
+                                        // 2) Ejecutamos el batch (elimina todos los “favoritos/{inmueble.id}”)
+                                        batch.commit()
+                                            .addOnSuccessListener {
+                                                // 3) Finalmente, navegamos de regreso o cerramos esta pantalla
+                                                navController.popBackStack()
+                                            }
+                                            .addOnFailureListener {
+                                                // Si falla el batch de favoritos, igual regresamos pero informamos
+                                                Toast.makeText(
+                                                    context,
+                                                    "Inmueble eliminado, pero no se pudieron limpiar todos los favoritos.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                navController.popBackStack()
+                                            }
+                                    }
+                                    .addOnFailureListener {
+                                        // Si falla al leer “usuarios”, mostramos un error y regresamos igual
+                                        Toast.makeText(
+                                            context,
+                                            "Inmueble eliminado, pero no se pudieron cargar usuarios para limpiar favoritos.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        navController.popBackStack()
+                                    }
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Error al eliminar el inmueble. Intenta de nuevo.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+
+                    }) {
+                        Text("Sí, eliminar")
+                    }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB2DFDB)),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(50)
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // ——— Botón “Editar inmueble” ———
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar Inmueble",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Editar Inmueble", fontWeight = FontWeight.Bold, color = Color.Black)
+                Button(
+                    onClick = {
+                        navController.navigate("edit_property/${inmueble.id}")
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB2DFDB)),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar Inmueble",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Editar inmueble", fontWeight = FontWeight.Bold, color = Color.Black)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ——— Botón “Eliminar inmueble” ———
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Button(
+                    onClick = { showDeleteDialog = true },
+                    enabled = !isDeleting,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF28B82)),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(end = 8.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Text("Eliminando…", color = Color.White)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Eliminar Inmueble",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Eliminar inmueble", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }

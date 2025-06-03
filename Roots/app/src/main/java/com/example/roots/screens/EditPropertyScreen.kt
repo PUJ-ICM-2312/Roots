@@ -114,7 +114,7 @@ fun EditPropertyScreen(
                 inmueble = fetched
                 // rellenar campos con datos existentes
                 direccion = fetched.direccion
-                precio = fetched.precio.toString()
+                precio = String.format(Locale.getDefault(), "%.0f", fetched.precio)
                 estrato = fetched.estrato.toString()
                 numBanos = fetched.numBanos.toString()
                 numParqueaderos = fetched.numParqueaderos.toString()
@@ -122,7 +122,7 @@ fun EditPropertyScreen(
                 metros = fetched.metrosCuadrados.toString()
                 barrio = fetched.barrio
                 ciudad = fetched.ciudad
-                admin = fetched.mensualidadAdministracion.toString()
+                admin = String.format(Locale.getDefault(), "%.0f", fetched.mensualidadAdministracion)
                 antiguedad = fetched.antiguedad.toString()
                 descripcion = fetched.descripcion
                 tipoPublicacion = fetched.tipoPublicacion

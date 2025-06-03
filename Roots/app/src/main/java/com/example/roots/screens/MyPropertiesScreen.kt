@@ -127,12 +127,24 @@ fun PropertyCard(
         elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Box {
+            // 1) Imagen de fondo
             AsyncImage(
                 model = inmueble.fotos.firstOrNull(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
+
+            // 2) Franja negra semi-transparente en la parte inferior, de ancho completo
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)              // ajusta la altura al tamaño que necesites
+                    .align(Alignment.BottomStart)
+                    .background(Color(0x80000000))
+            )
+
+            // 3) El texto, sobre la franja negra
             Text(
                 text = "${inmueble.barrio} • ${inmueble.metrosCuadrados.toInt()} m²",
                 color = Color.White,
@@ -140,12 +152,12 @@ fun PropertyCard(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .background(Color(0x80000000))
-                    .padding(8.dp)
+                    .padding(start = 8.dp, bottom = 6.dp) // separaciones interiores
             )
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
