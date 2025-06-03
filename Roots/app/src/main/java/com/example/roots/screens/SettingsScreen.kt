@@ -36,6 +36,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
 import java.io.File
 
+val usuarioRepository = UsuarioRepository()
+val usuarioService = UsuarioService(usuarioRepository)
+
 @Composable
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current

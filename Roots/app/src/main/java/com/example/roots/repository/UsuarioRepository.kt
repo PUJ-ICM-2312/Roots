@@ -28,6 +28,13 @@ class UsuarioRepository {
             .addOnFailureListener { onResult(false) }
     }
 
+    fun update(usuario: Usuario?) {
+        if (usuario != null){
+            collection.document(usuario.id).set(usuario)
+        }
+        else{
+            print("Error, usuario nulo")
+        }
     fun getById(id: String, onResult: (Usuario?) -> Unit) {
         if (id.isBlank()) {
             onResult(null)

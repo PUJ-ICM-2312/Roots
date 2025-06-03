@@ -17,7 +17,7 @@ data class Inmueble(
     val metrosCuadrados: Float = 0f,
     val mensualidadAdministracion: Float = 0f,
     val antiguedad: Int = 0,
-    val numFavoritos: Int = 0,
+    var numFavoritos: Int = 0,
     val descripcion: String = "",
     val fotos: List<String> = emptyList(),
     val fechaPublicacion: Long = 0L,
