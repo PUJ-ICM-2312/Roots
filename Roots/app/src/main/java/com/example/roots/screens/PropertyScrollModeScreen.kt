@@ -118,6 +118,10 @@ fun PropertyScrollModeScreen(
             PropertyLocation(item)
             PropertyMap(item)
 
+            EditPropertyButton(navController = navController, inmueble = item)
+            ContactButton(navController = navController, inmueble = item)
+
+
             // ——————————————
             // Aquí agregamos la caja (Box) que contendrá los botones,
             // con un fondo claro y padding, separada del mapa.
@@ -129,7 +133,6 @@ fun PropertyScrollModeScreen(
             ) {
                 ContactAndLikeButtons(navController = navController, inmueble = item)
             }
-            // ——————————————
 
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -321,10 +324,14 @@ fun ContactAndLikeButtons(
     navController: NavController,
     inmueble: Inmueble
 ) {
-    val context = LocalContext.current
-    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
-    if (currentUserId.isNullOrBlank()) return
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
+    if (currentUserId == inmueble.usuarioId) {
+        // Si es el dueño, no se renderiza nada
+        return
+    }
+
+    val context = LocalContext.current
     val chatService = remember { ChatService() }
     // 1) Estado local para el usuario cargado desde Firestore
     var usuario by remember { mutableStateOf<com.example.roots.model.Usuario?>(null) }
@@ -569,4 +576,42 @@ fun decodePolyline(encoded: String): List<LatLng> {
         poly.add(latLng)
     }
     return poly
+}
+
+@Composable
+fun EditPropertyButton(
+    navController: NavController,
+    inmueble: Inmueble
+) {
+    // 1) Obtenemos el UID del usuario autenticado
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        ?: return  // Si no hay usuario autenticado, no mostramos nada
+
+    // 2) Comprobamos si el inmueble pertenece al usuario actual
+    if (inmueble.usuarioId == currentUserId) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                onClick = {
+                    // Navegamos a la pantalla de edición, pasándole el ID del inmueble
+                    navController.navigate("edit_property/${inmueble.id}")
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB2DFDB)),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Editar Inmueble",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Editar Inmueble", fontWeight = FontWeight.Bold, color = Color.Black)
+            }
+        }
+    }
 }

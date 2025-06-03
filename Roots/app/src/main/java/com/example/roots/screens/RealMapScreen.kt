@@ -262,19 +262,6 @@ fun RealMapScreen(navController: NavController) {
                     )
                 }
 
-
-                //markers.forEach { (position, title) ->
-                // Marcadores de propiedades
-               /* markers.forEach { (position, title) ->
-                    Marker(
-                        state = MarkerState(position = position),
-                        title = title,
-                        snippet = "Ver más...",
-                        icon = markerIcon
-                    )
-                }*/
-
-
                 userLocation?.let {
                     Marker(
                         state = MarkerState(position = it),
