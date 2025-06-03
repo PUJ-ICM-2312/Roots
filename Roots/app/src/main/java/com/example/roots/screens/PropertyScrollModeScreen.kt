@@ -119,7 +119,7 @@ fun PropertyScrollModeScreen(
             PropertyMap(item)
 
             EditPropertyButton(navController = navController, inmueble = item)
-            ContactButton(navController = navController, inmueble = item)
+            ContactAndLikeButtons(navController = navController, inmueble = item)
 
 
             // ——————————————
