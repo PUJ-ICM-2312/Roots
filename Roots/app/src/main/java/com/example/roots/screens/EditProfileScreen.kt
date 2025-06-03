@@ -46,6 +46,13 @@ import com.example.roots.ui.theme.RootsTheme
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.ImageDecoder
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
+import java.io.IOException
 
 /**
  * Pantalla para editar el perfil: se carga la info de Firebase, muestra campos (nombres, apellidos, correo, celular, cédula)
@@ -104,26 +111,55 @@ fun EditProfileScreen(navController: NavController) {
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bmp: Bitmap? ->
-        bmp?.let {
-            // Convertimos el Bitmap en un archivo temporal en cache y obtenemos su URI
-            val filename = "profile_${System.currentTimeMillis()}.jpg"
-            val file = File(context.cacheDir, filename)
-            FileOutputStream(file).use { out ->
-                it.compress(Bitmap.CompressFormat.JPEG, 90, out)
+        bmp?.let { bitmap ->
+            // 1) Guardar en MediaStore (galería pública)
+            val savedUriString = saveBitmapToGallery(context, bitmap)
+            if (savedUriString != null) {
+                val galleryUri = Uri.parse(savedUriString)
+                profileImageUri = galleryUri
+                photoChanged = true
+            } else {
+                Toast.makeText(context, "Error al guardar foto en galería", Toast.LENGTH_SHORT).show()
+                return@rememberLauncherForActivityResult
             }
-            val uri = Uri.fromFile(file)
-            profileImageUri = uri
-            photoChanged = true
+
+            // 2) (Opcional) Guardar una copia en storage privado de la app
+            val filenamePrivado = "profile_local_${System.currentTimeMillis()}.jpg"
+            val filePrivado = File(context.filesDir, filenamePrivado)
+            FileOutputStream(filePrivado).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            // Si quisieras usar esa ruta en algún sitio:
+            // val localPath = filePrivado.absolutePath
         }
     }
+
 
     // 6) Launcher para elegir foto de la galería: devuelve URI
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            profileImageUri = it
-            photoChanged = true
+            // Si el usuario sacó la foto de la galería, también la guardamos en MediaStore
+            coroutineScope.launch {
+                //  Leer el bitmap de la URI original
+                val bmp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val src = ImageDecoder.createSource(context.contentResolver, it)
+                    ImageDecoder.decodeBitmap(src)
+                } else {
+                    @Suppress("DEPRECATION")
+                    MediaStore.Images.Media.getBitmap(context.contentResolver, it)
+                }
+
+                // Guardarla en MediaStore (para que sea permanente)
+                val savedUriString = saveBitmapToGallery(context, bmp)
+                if (savedUriString != null) {
+                    profileImageUri = Uri.parse(savedUriString)
+                    photoChanged = true
+                } else {
+                    Toast.makeText(context, "Error al guardar foto en galería", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -336,6 +372,52 @@ fun EditProfileScreen(navController: NavController) {
                 Text("Actualizar perfil", fontSize = 16.sp, color = Color.Black)
             }
         }
+    }
+}
+
+fun saveBitmapToGallery(context: Context, bitmap: Bitmap, displayName: String = ""): String? {
+    val filename = if (displayName.isNotBlank()) {
+        "$displayName.jpg"
+    } else {
+        "IMG_${System.currentTimeMillis()}.jpg"
+    }
+
+    // Preparamos los datos para insertar en MediaStore
+    val values = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/RootsApp")
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+    }
+
+    // URI donde se insertará la imagen
+    val resolver = context.contentResolver
+    val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+    } else {
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+    }
+
+    val itemUri = resolver.insert(collection, values) ?: return null
+
+    return try {
+        // Abrimos un OutputStream para escribir el bitmap
+        resolver.openOutputStream(itemUri)?.use { stream ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, stream)
+        }
+        // Si estamos en Android Q+, marcamos que ya no está pendiente
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            values.clear()
+            values.put(MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(itemUri, values, null, null)
+        }
+        // Retornamos el path de la URI guardada
+        itemUri.toString()
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
     }
 }
 
