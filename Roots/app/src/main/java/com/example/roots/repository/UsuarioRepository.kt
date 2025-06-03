@@ -17,8 +17,13 @@ class UsuarioRepository {
         }
     }
 
-    fun update(usuario: Usuario) {
-        collection.document(usuario.id).set(usuario)
+    fun update(usuario: Usuario?) {
+        if (usuario != null){
+            collection.document(usuario.id).set(usuario)
+        }
+        else{
+            print("Error, usuario nulo")
+        }
     }
 
     fun delete(id: String) {
