@@ -58,6 +58,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.service.LoginService
 import com.example.roots.ui.theme.RootsTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
 
 val inmuebleRepository = InmuebleRepository()
 val inmuebleService = InmuebleService(inmuebleRepository)
@@ -365,7 +368,23 @@ fun ContactAndLikeButtons(
                     propertyBarrio = barrio
                 ) { chatId ->
                     if (chatId != null) {
-                        navController.navigate("chat_room/$chatId")
+                        // 🔁 Ahora sí: obtener el documento y extraer participantes
+                        FirebaseFirestore.getInstance().collection("chats").document(chatId)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                val participantes = doc.get("participantes") as? List<String>
+                                val receptorId = participantes?.firstOrNull { it != currentUserId }
+                                if (receptorId != null) {
+                                    navController.navigate("chat_room/$chatId/$receptorId")
+                                } else {
+                                    Toast.makeText(context, "No se pudo identificar el receptor", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Error al obtener chat", Toast.LENGTH_SHORT).show()
+                            }
+
                     } else {
                         Toast.makeText(
                             context,
@@ -462,9 +481,6 @@ fun ContactAndLikeButtons(
         }
     }
 }
-
-
-
 
 @Composable
 fun PropertyFeature(icon: ImageVector, label: String) {

@@ -67,11 +67,12 @@ class ChatService(
      * Retorna un Query para obtener todos los chats del usuario dado,
      * ordenados por timestampUltimoMensaje DESC.
      */
-    fun getChatsForUser(currentUserId: String): Query {
-        return chatsCol
-            .whereArrayContains("participantes", currentUserId)
-            .orderBy("timestampUltimoMensaje", Query.Direction.DESCENDING)
+    fun getChatsForUser(userId: String): Query {
+        return FirebaseFirestore.getInstance()
+            .collection("chats")
+            .whereArrayContains("participantes", userId)
     }
+
 
     /**
      * Envía un mensaje a /chats/{chatId}/messages y actualiza el campo 'ultimoMensaje'
@@ -80,23 +81,35 @@ class ChatService(
     fun sendMessage(
         chatId: String,
         mensaje: Mensaje,
+        remitenteId: String,
         onResult: (Boolean) -> Unit
     ) {
         val chatDoc = chatsCol.document(chatId)
-        // 1) Actualizar último mensaje en el chat
+
+        // 1) Actualizar último mensaje + timestamp
         val updateData = mapOf(
             "ultimoMensaje" to mensaje.contenido,
-            "timestampUltimoMensaje" to mensaje.timestamp
-        )
-        chatDoc.update(updateData)
-            .addOnFailureListener { /* ignoramos por ahora */ }
+            "timestampUltimoMensaje" to mensaje.timestamp,
+            "vistoPor" to mapOf(
+                mensaje.idEmisor to true,
+                // El otro usuario (receptor) a false:
+                mensaje.idReceptor to false
+            )
 
-        // 2) Insertar el mensaje en subcolección /chats/{chatId}/messages
+        )
+
+
+        chatDoc.update(updateData)
+            .addOnFailureListener { /* ignoramos error de update parcial */ }
+
+        // 2) Insertar mensaje en subcolección
         chatDoc.collection("messages")
             .add(mensaje.copy(id = "")) // Firestore asigna ID automáticamente
             .addOnSuccessListener { onResult(true) }
             .addOnFailureListener { onResult(false) }
     }
+
+
 
     /**
      * Retorna un Query que devuelve todos los mensajes de un chat ordenados por timestamp ASC.
@@ -106,4 +119,10 @@ class ChatService(
             .collection("messages")
             .orderBy("timestamp", Query.Direction.ASCENDING)
     }
+
+    fun marcarComoLeido(chatId: String, userId: String) {
+        val chatRef = db.collection("chats").document(chatId)
+        chatRef.update("vistoPor.$userId", true)
+    }
+
 }
