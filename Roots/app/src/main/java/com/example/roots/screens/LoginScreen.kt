@@ -17,13 +17,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.roots.R
-
 import com.example.roots.screens.Screen
 import com.example.roots.service.SecureStorage
 import com.example.roots.service.showBiometricPrompt
@@ -34,6 +32,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -78,7 +77,13 @@ fun LoginScreen(navController: NavController) {
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                // Limpiamos el mensaje de error si el usuario empieza a escribir
+                if (!errorMessage.isNullOrEmpty()) {
+                    errorMessage = null
+                }
+            },
             label = { Text("Correo electrónico") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(0.8f)
@@ -88,7 +93,12 @@ fun LoginScreen(navController: NavController) {
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                if (!errorMessage.isNullOrEmpty()) {
+                    errorMessage = null
+                }
+            },
             label = { Text("Contraseña") },
             singleLine = true,
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -105,16 +115,27 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         if (errorMessage != null) {
-            Text(text = errorMessage ?: "", color = Color.Red, fontSize = 14.sp)
+            Text(
+                text = errorMessage ?: "",
+                color = Color.Red,
+                fontSize = 14.sp
+            )
             Spacer(modifier = Modifier.height(8.dp))
         }
 
         Button(
-            onClick = { handleLogin(email, password) },
+            onClick = {
+                // Validamos antes de llamar a handleLogin
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = "El correo y la contraseña no pueden estar vacíos"
+                } else {
+                    handleLogin(email.trim(), password)
+                }
+            },
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF98FB98)),
             modifier = Modifier.fillMaxWidth(0.8f),
-            enabled = !isLoading
+            enabled = !isLoading // Deshabilitamos solo cuando esté cargando. O bien podríamos agregar (email.isNotBlank() && password.isNotBlank()) para deshabilitar si falta algún campo.
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -175,13 +196,5 @@ fun LoginScreen(navController: NavController) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewLoginScreen() {
-    RootsTheme {
-        LoginScreen(navController = rememberNavController())
     }
 }
