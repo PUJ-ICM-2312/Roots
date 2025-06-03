@@ -38,6 +38,8 @@ import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.util.Log
+import androidx.compose.foundation.shape.CircleShape
 
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -58,6 +60,8 @@ fun MessagesScreen(navController: NavController) {
     //    filtros -> conjunto de propertyIds seleccionados para filtrar
     var filtros by remember { mutableStateOf<Set<String>>(emptySet()) }
 
+    var selectedTab by remember { mutableStateOf(0) } // 0 = Mis inmuebles, 1 = Mis mensajes enviados
+
     // ─── CARGAR PROPIEDADES PROPIAS ───
     LaunchedEffect(currentUserId) {
         inmService.getPropertiesOfUser(currentUserId) { lista ->
@@ -73,17 +77,22 @@ fun MessagesScreen(navController: NavController) {
 
         listenerChats = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                Toast.makeText(context, "Error al cargar chats", Toast.LENGTH_SHORT).show()
+                Log.e("CHAT_FIRESTORE", "SnapshotListener error: ${error.message}", error)
+                Toast.makeText(context, "Error al cargar chats: ${error.message}", Toast.LENGTH_LONG).show()
                 return@addSnapshotListener
             }
+
             if (snapshot != null) {
                 val lista = snapshot.documents.mapNotNull { doc ->
                     val chat = doc.toObject(Chat::class.java)
                     chat?.copy(id = doc.id)
                 }
                 allChats = lista
+            } else {
+                Toast.makeText(context, "Snapshot vacío", Toast.LENGTH_SHORT).show()
             }
         }
+
         onDispose {
             listenerChats?.remove()
         }
@@ -91,98 +100,132 @@ fun MessagesScreen(navController: NavController) {
 
     // ─── FILTRAR CHATS ───
     val chatsAMostrar by derivedStateOf {
-        if (filtros.isEmpty()) {
-            allChats
+        if (selectedTab == 0) {
+            val misIds = misPropiedades.map { it.id }.toSet()
+            if (filtros.isEmpty()) {
+                allChats.filter { it.propertyId in misIds }
+            } else {
+                allChats.filter { it.propertyId in filtros }
+            }
         } else {
-            allChats.filter { it.propertyId in filtros }
+            val misIds = misPropiedades.map { it.id }.toSet()
+            allChats.filter { it.propertyId !in misIds }
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // ─── LISTA HORIZONTAL DE PROPIEDADES PROPIAS (FILTROS) ───
-        if (misPropiedades.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(vertical = 8.dp)
-            ) {
-                items(misPropiedades) { prop ->
-                    // Cada tarjeta es clickeable para alternar filtro
-                    val seleccionado = prop.id in filtros
-                    Card(
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp)
-                            .size(width = 120.dp, height = 120.dp)
-                            .clickable {
-                                filtros = if (seleccionado) {
-                                    filtros - prop.id
-                                } else {
-                                    filtros + prop.id
-                                }
-                            },
-                        shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (seleccionado) Color(0xFFB2DFDB) else Color.White
-                        )
-                    ) {
-                        Column {
-                            // Foto (primera URL en prop.fotos)
-                            if (prop.fotos.isNotEmpty()) {
-                                Image(
-                                    painter = rememberAsyncImagePainter(prop.fotos.first()),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .height(80.dp)
-                                        .fillMaxWidth(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .height(80.dp)
-                                        .fillMaxWidth()
-                                        .background(Color.LightGray),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("Sin foto", fontSize = 12.sp)
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = prop.barrio,
-                                modifier = Modifier.padding(horizontal = 4.dp),
-                                fontSize = 12.sp
+
+    Scaffold(
+        topBar = {
+            TabRow(selectedTabIndex = selectedTab) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = { Text("Mis inmuebles") }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = { selectedTab = 1 },
+                    text = { Text("Mis mensajes enviados") }
+                )
+            }
+        }
+    ) { innerPadding ->
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // ─── LISTA HORIZONTAL DE PROPIEDADES PROPIAS (FILTROS) ───
+            if (selectedTab == 0 && misPropiedades.isNotEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFF5F5F5))
+                        .padding(vertical = 8.dp)
+                ) {
+                    items(misPropiedades) { prop ->
+                        val seleccionado = prop.id in filtros
+                        Card(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(width = 120.dp, height = 120.dp)
+                                .clickable {
+                                    filtros = if (seleccionado) {
+                                        filtros - prop.id
+                                    } else {
+                                        filtros + prop.id
+                                    }
+                                },
+                            shape = RoundedCornerShape(8.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (seleccionado) Color(0xFFB2DFDB) else Color.White
                             )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                if (prop.fotos.isNotEmpty()) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(prop.fotos.first()),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(RoundedCornerShape(50)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(RoundedCornerShape(50))
+                                            .background(Color.LightGray),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("Sin foto", fontSize = 12.sp)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                Text(
+                                    text = prop.barrio,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.Black
+                                )
+                            }
+
                         }
                     }
                 }
             }
-        }
 
-        // ─── LISTADO VERTICAL DE CHATS ───
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(chatsAMostrar) { chat ->
-                ChatListItem(chat = chat, navController = navController)
-                Divider()
+            // ─── LISTADO VERTICAL DE CHATS ───
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(chatsAMostrar) { chat ->
+                    ChatListItem(chat = chat, navController = navController)
+                    Divider()
+                }
             }
         }
     }
+
 }
 
 @Composable
 fun ChatListItem(chat: Chat, navController: NavController) {
-    // Mostramos:
-    // 1) Imagen (chat.propertyFoto)
-    // 2) Barrio (chat.propertyBarrio)
-    // 3) Último mensaje (chat.ultimoMensaje)
-    // 4) Fecha/hora (chat.timestampUltimoMensaje)
-
+    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val fecha = remember(chat.timestampUltimoMensaje) {
         val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         sdf.format(Date(chat.timestampUltimoMensaje))
     }
+    val noLeido = chat.vistoPor[currentUserId] != true
 
     Row(
         modifier = Modifier
@@ -191,14 +234,14 @@ fun ChatListItem(chat: Chat, navController: NavController) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Foto del inmueble (si existe)
+        // Imagen circular
         if (chat.propertyFoto.isNotBlank()) {
             Image(
                 painter = rememberAsyncImagePainter(chat.propertyFoto),
                 contentDescription = null,
                 modifier = Modifier
                     .size(56.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(50)),
                 contentScale = ContentScale.Crop
             )
         } else {
@@ -216,11 +259,7 @@ fun ChatListItem(chat: Chat, navController: NavController) {
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = chat.propertyBarrio,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Text(text = chat.propertyBarrio, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = chat.ultimoMensaje.ifBlank { "— Sin mensajes —" },
@@ -229,7 +268,19 @@ fun ChatListItem(chat: Chat, navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = fecha, fontSize = 12.sp, color = Color.Gray)
+        Column(horizontalAlignment = Alignment.End) {
+            Text(text = fecha, fontSize = 12.sp, color = Color.Gray)
+            if (noLeido) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(Color.Red)
+                )
+            }
+        }
     }
 }
+
+
