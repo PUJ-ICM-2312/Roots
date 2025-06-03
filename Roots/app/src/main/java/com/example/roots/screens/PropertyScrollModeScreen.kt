@@ -334,6 +334,7 @@ fun ContactButton(
                                 if (receptorId != null) {
                                     navController.navigate("chat_room/$chatId/$receptorId")
                                 } else {
+
                                     Toast.makeText(context, "No se pudo identificar el receptor", Toast.LENGTH_SHORT).show()
                                 }
                             }
