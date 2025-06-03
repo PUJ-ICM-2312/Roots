@@ -42,7 +42,6 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -428,7 +427,7 @@ fun ContactAndLikeButtons(
                         // Actualizamos numFavoritos localmente
                         inmueble.numFavoritos += 1
                         // Persistimos en Firestore: usuario y inmueble
-                        usuarioService.actualizar(usuarioActualizado)
+                        usuarioService.actualizar(usuarioActualizado){}
                         inmuebleService.actualizar(inmueble) { success ->
                             if (success) {
                                 likesCount = inmueble.numFavoritos
@@ -447,7 +446,7 @@ fun ContactAndLikeButtons(
                         }
                         val usuarioActualizado = u.copy(favoritos = nuevosFavoritos)
                         inmueble.numFavoritos -= 1
-                        usuarioService.actualizar(usuarioActualizado)
+                        usuarioService.actualizar(usuarioActualizado){}
                         inmuebleService.actualizar(inmueble) { success ->
                             if (success) {
                                 likesCount = inmueble.numFavoritos
