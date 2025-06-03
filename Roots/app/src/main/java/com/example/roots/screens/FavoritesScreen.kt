@@ -14,14 +14,23 @@ import androidx.navigation.NavController
 import com.example.roots.model.Inmueble
 import com.example.roots.repository.InmuebleRepository
 import com.example.roots.components.BottomNavBar
+import com.example.roots.repository.UsuarioRepository
+import com.example.roots.service.LoginService
+import com.example.roots.service.UsuarioService
+
 @Composable
 fun FavoritesScreen(navController: NavController) {
+    val usuarioRepository = UsuarioRepository()
+    val usuarioService = UsuarioService(usuarioRepository)
     val favoritos = remember { mutableStateOf<List<Inmueble>>(emptyList()) }
 
     // Carga inicial de favoritos desde Firebase
     LaunchedEffect(Unit) {
         InmuebleRepository().getAll { list ->
-            favoritos.value = list.filter { it.numFavoritos > 0 }
+            usuarioService.obtener(LoginService.getCurrentUser()?.uid ?: "") {
+                usuario ->
+                favoritos.value = usuario?.favoritos?: mutableListOf()
+            }
         }
     }
 
