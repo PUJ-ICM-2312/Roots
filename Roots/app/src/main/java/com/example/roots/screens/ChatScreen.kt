@@ -30,10 +30,16 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun ChatScreen(
     navController: NavController,
-    chatId: String
-) {
+    chatId: String,
+    receptorId: String
+)
+{
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val chatService = remember { ChatService() }
+    LaunchedEffect(chatId, currentUserId) {
+        chatService.marcarComoLeido(chatId, currentUserId)
+    }
+
 
     // 1) Estado para mensajes
     var mensajes by remember { mutableStateOf<List<Mensaje>>(emptyList()) }
@@ -99,6 +105,7 @@ fun ChatScreen(
                             id = "",
                             idChat = chatId,
                             idEmisor = currentUserId,
+                            idReceptor = receptorId, // ✅ Aquí ahora sí lo tienes
                             contenido = nuevoTexto.trim(),
                             timestamp = System.currentTimeMillis(),
                             leidoPor = listOf(currentUserId)

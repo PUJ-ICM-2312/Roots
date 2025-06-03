@@ -1,9 +1,8 @@
 package com.example.roots.screens
 
-import android.location.Location
 import android.annotation.SuppressLint
+import android.location.Location
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -28,13 +27,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.example.roots.model.Inmueble
-import com.example.roots.service.InmuebleService
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import com.example.roots.components.BottomNavBar
+import com.example.roots.model.Inmueble
+import com.example.roots.repository.InmuebleRepository
+import com.example.roots.service.ChatService
+import com.example.roots.service.InmuebleService
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -45,22 +42,33 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.roots.repository.InmuebleRepository
-import com.example.roots.service.ChatService
+import com.example.roots.service.LoginService
 import com.example.roots.ui.theme.RootsTheme
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+
+
+val inmuebleRepository = InmuebleRepository()
+val inmuebleService = InmuebleService(inmuebleRepository)
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun PropertyScrollModeScreen(
     navController: NavController,
-    propertyId: String      // <— ahora String, no Int
+    propertyId: String // <— ahora String, no Int
 ) {
     // 1) Estado local para el inmueble que viene de Firestore
     val inmuebleService = remember { InmuebleService(InmuebleRepository()) }
@@ -96,10 +104,12 @@ fun PropertyScrollModeScreen(
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
-    ) {
+    ) { innerPadding ->
+        // Aplicamos innerPadding para que el contenido no quede tapado por la bottomBar
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
             ImageCarousel(item)
@@ -107,12 +117,28 @@ fun PropertyScrollModeScreen(
             PropertyDescription(item)
             PropertyLocation(item)
             PropertyMap(item)
+
             EditPropertyButton(navController = navController, inmueble = item)
             ContactButton(navController = navController, inmueble = item)
+
+
+            // ——————————————
+            // Aquí agregamos la caja (Box) que contendrá los botones,
+            // con un fondo claro y padding, separada del mapa.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5)) // color de fondo claro para distinguir
+                    .padding(vertical = 8.dp, horizontal = 16.dp)
+            ) {
+                ContactAndLikeButtons(navController = navController, inmueble = item)
+            }
+
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
+
 
 @Composable
 fun ImageCarousel(inmueble: Inmueble) {
@@ -216,8 +242,8 @@ fun PropertyMap(inmueble: Inmueble) {
                     // Reemplaza "YOUR_API_KEY" por tu clave de Directions API
                     val url =
                         "https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${inmueble.latitud},${inmueble.longitud}&key=AIzaSyDKjhqaBtcvLF4zW_VsHkXZYi3y4lCWeh0"
-                    val client = okhttp3.OkHttpClient()
-                    val request = okhttp3.Request.Builder().url(url).build()
+                    val client = OkHttpClient()
+                    val request = Request.Builder().url(url).build()
 
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
@@ -225,7 +251,7 @@ fun PropertyMap(inmueble: Inmueble) {
                             val body = response.body?.string()
 
                             body?.let { json ->
-                                val jsonObject = org.json.JSONObject(json)
+                                val jsonObject = JSONObject(json)
                                 val routes = jsonObject.getJSONArray("routes")
                                 if (routes.length() > 0) {
                                     val overviewPolyline = routes
@@ -294,7 +320,7 @@ fun PropertyMap(inmueble: Inmueble) {
 }
 
 @Composable
-fun ContactButton(
+fun ContactAndLikeButtons(
     navController: NavController,
     inmueble: Inmueble
 ) {
@@ -307,20 +333,37 @@ fun ContactButton(
 
     val context = LocalContext.current
     val chatService = remember { ChatService() }
+    // 1) Estado local para el usuario cargado desde Firestore
+    var usuario by remember { mutableStateOf<com.example.roots.model.Usuario?>(null) }
+    // 2) Estado local para isLiked, se inicializará luego de cargar el usuario
+    var isLiked by remember { mutableStateOf(false) }
+    // 3) Estado para forzar recuento de "likes"
+    var likesCount by remember { mutableStateOf(inmueble.numFavoritos) }
 
-    Box(
+    // 4) Cuando se monte este Composable, cargamos el usuario y calculamos isLiked:
+    LaunchedEffect(currentUserId, inmueble.id) {
+        usuarioService.obtener(currentUserId) { fetchedUser ->
+            if (fetchedUser != null) {
+                usuario = fetchedUser
+                // Verificamos si el inmueble está en su lista de favoritos (comparamos ids)
+                val yaEsFavorito = fetchedUser.favoritos.any { it.id == inmueble.id }
+                isLiked = yaEsFavorito
+            }
+        }
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        // ———— Botón “Contactar” ————
         Button(
             onClick = {
-                // Dueño del inmueble
                 val ownerUserId = inmueble.usuarioId
-                // Primera foto como thumbnail (o cadena vacía si no hay)
                 val fotoThumbnail = inmueble.fotos.firstOrNull().orEmpty()
-                // Barrio del inmueble
                 val barrio = inmueble.barrio
 
                 chatService.createOrGetChat(
@@ -331,7 +374,23 @@ fun ContactButton(
                     propertyBarrio = barrio
                 ) { chatId ->
                     if (chatId != null) {
-                        navController.navigate("chat_room/$chatId")
+                        // 🔁 Ahora sí: obtener el documento y extraer participantes
+                        FirebaseFirestore.getInstance().collection("chats").document(chatId)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                val participantes = doc.get("participantes") as? List<String>
+                                val receptorId = participantes?.firstOrNull { it != currentUserId }
+                                if (receptorId != null) {
+                                    navController.navigate("chat_room/$chatId/$receptorId")
+                                } else {
+                                    Toast.makeText(context, "No se pudo identificar el receptor", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Error al obtener chat", Toast.LENGTH_SHORT).show()
+                            }
+
                     } else {
                         Toast.makeText(
                             context,
@@ -345,11 +404,86 @@ fun ContactButton(
                 containerColor = Color(0xFFD5FDE5),
                 contentColor = Color.Black
             ),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.weight(1f)
         ) {
             Icon(Icons.Default.ChatBubble, contentDescription = "Contactar")
             Spacer(modifier = Modifier.width(8.dp))
             Text("Contactar", fontWeight = FontWeight.Bold)
+        }
+
+        // ———— Botón “Me Gusta” con contador al lado del icono ————
+        Row(
+            modifier = Modifier
+                .clip(RoundedCornerShape(24.dp))
+                .background(if (isLiked) Color(0xFFFFE5E5) else Color(0xFFF0F0F0))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    // Asegurarse de que el usuario ya esté cargado
+                    val u = usuario ?: return@IconButton
+
+                    // 1) Invertimos el estado local
+                    isLiked = !isLiked
+
+                    if (isLiked) {
+                        // Convertimos la lista inmutable a mutable para poder agregar
+                        val nuevosFavoritos = u.favoritos.toMutableList().apply { add(inmueble) }
+                        val usuarioActualizado = u.copy(favoritos = nuevosFavoritos)
+                        // Actualizamos numFavoritos localmente
+                        inmueble.numFavoritos += 1
+                        // Persistimos en Firestore: usuario y inmueble
+                        usuarioService.actualizar(usuarioActualizado){}
+                        inmuebleService.actualizar(inmueble) { success ->
+                            if (success) {
+                                likesCount = inmueble.numFavoritos
+                                usuario = usuarioActualizado
+                            } else {
+                                // Si falla, revertir cambios
+                                inmueble.numFavoritos -= 1
+                                isLiked = false
+                                likesCount = inmueble.numFavoritos
+                            }
+                        }
+                    } else {
+                        // Si estaba en favoritos, lo quitamos
+                        val nuevosFavoritos = u.favoritos.toMutableList().apply {
+                            removeAll { it.id == inmueble.id }
+                        }
+                        val usuarioActualizado = u.copy(favoritos = nuevosFavoritos)
+                        inmueble.numFavoritos -= 1
+                        usuarioService.actualizar(usuarioActualizado){}
+                        inmuebleService.actualizar(inmueble) { success ->
+                            if (success) {
+                                likesCount = inmueble.numFavoritos
+                                usuario = usuarioActualizado
+                            } else {
+                                // Si falla, revertir cambios
+                                inmueble.numFavoritos += 1
+                                isLiked = true
+                                likesCount = inmueble.numFavoritos
+                            }
+                        }
+                    }
+                }
+            ) {
+                val icon = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder
+                val tint = if (isLiked) Color.Red else Color.Gray
+                Icon(
+                    imageVector = icon,
+                    contentDescription = if (isLiked) "Ya te gusta" else "Me gusta",
+                    tint = tint
+                )
+            }
+
+            // Texto con la cantidad de “likes” al lado del icono
+            Text(
+                text = likesCount.toString(),
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = if (isLiked) Color.Red else Color.Gray
+            )
         }
     }
 }
@@ -361,7 +495,6 @@ fun PropertyFeature(icon: ImageVector, label: String) {
         Text(text = label)
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
@@ -404,7 +537,7 @@ fun PreviewPropertyScrollMode() {
             PropertyDescription(dummy)
             PropertyLocation(dummy)
             PropertyMap(dummy)
-            ContactButton(navController = rememberNavController(), inmueble = dummy)
+            ContactAndLikeButtons(navController = rememberNavController(), inmueble = dummy)
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
