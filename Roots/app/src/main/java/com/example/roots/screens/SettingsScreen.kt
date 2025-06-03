@@ -1,12 +1,16 @@
 package com.example.roots.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.GridOn
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,58 +18,59 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.roots.R
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.roots.components.BottomNavBar
-import com.example.roots.repository.UsuarioRepository
 import coil.compose.AsyncImage
+import com.example.roots.R
+import com.example.roots.components.BottomNavBar
 import com.example.roots.model.Usuario
 import com.example.roots.service.LoginService
 import com.example.roots.service.UsuarioService
+import com.example.roots.repository.UsuarioRepository
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
 import java.io.File
 
-val usuarioRepository = UsuarioRepository()
-val usuarioService = UsuarioService(usuarioRepository)
-
 @Composable
 fun SettingsScreen(navController: NavController) {
-    var currentUser: Usuario? = null
-
+    val context = LocalContext.current
     val firebaseUser = LoginService.getCurrentUser()
-    if (firebaseUser != null) {
-        usuarioService.obtener(firebaseUser.uid) { usuario ->
-            if (usuario != null) {
-                currentUser = usuario
-                println("Usuario actual: ${currentUser?.nombres}")
-                // Aquí ya puedes usar currentUser
-            } else {
-                println("Usuario no encontrado")
+    val usuarioService = remember { UsuarioService(UsuarioRepository()) }
+
+    // Estado observable para el Usuario (inicia en null)
+    var currentUser by remember { mutableStateOf<Usuario?>(null) }
+
+    // 1) Cargar usuario desde Firestore cuando el Composable se monte
+    LaunchedEffect(firebaseUser?.uid) {
+        firebaseUser?.uid?.let { uid ->
+            usuarioService.obtener(uid) { usuario ->
+                if (usuario != null) {
+                    currentUser = usuario
+                } else {
+                    Toast.makeText(context, "No se pudo cargar datos de usuario", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-    } else {
-        println("No hay usuario autenticado")
     }
-
-
 
     Scaffold(
         bottomBar = { BottomNavBar(navController) }
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(paddingValues)
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Logo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top
@@ -81,14 +86,16 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Avatar circular
             Box(
                 modifier = Modifier.size(110.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (currentUser?.fotoPath?.isNotEmpty() ?: false) {
+                if (!currentUser?.fotoPath.isNullOrBlank()) {
+                    // Si existe una URL de foto en Firestore, la mostramos con AsyncImage
                     AsyncImage(
-                        model = File(currentUser?.fotoPath),
-                        contentDescription = null,
+                        model = currentUser!!.fotoPath,
+                        contentDescription = "Foto de perfil",
                         modifier = Modifier
                             .size(110.dp)
                             .clip(CircleShape),
@@ -106,19 +113,22 @@ fun SettingsScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "${currentUser?.nombres} ${currentUser?.apellidos}",
-                fontSize = 16.sp
-            )
 
+            // Nombre completo o texto de carga
+            Text(
+                text = currentUser?.let { "${it.nombres} ${it.apellidos}" } ?: "Cargando...",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Botones de navegación
             SettingsButton(Icons.Default.Settings, "Perfil") {
                 navController.navigate("edit_profile")
             }
             SettingsButton(Icons.Default.Description, "Términos y condiciones") {
-                // TODO: Navegar a terminos
+                // TODO: Navegar a términos
             }
             SettingsButton(Icons.Default.GridOn, "Revisa tu plan") {
                 navController.navigate("current_plan")
@@ -131,7 +141,11 @@ fun SettingsScreen(navController: NavController) {
 }
 
 @Composable
-fun SettingsButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, onClick: () -> Unit) {
+private fun SettingsButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5)),
@@ -145,11 +159,23 @@ fun SettingsButton(icon: androidx.compose.ui.graphics.vector.ImageVector, text: 
         Text(text = text, color = Color.Black)
     }
 }
-
 @Preview(showBackground = true)
 @Composable
 fun PreviewSettings() {
+    // Para preview podemos simular un usuario ficticio. No hace falta cargar Firestore.
+    val dummy = Usuario(
+        id = "123",
+        nombres = "Juan",
+        apellidos = "Pérez",
+        correo = "juan@example.com",
+        fotoPath = "", // o URL a imagen pública
+        celular = "3001234567",
+        cedula = "12345678"
+    )
+    // Forzamos el estado en preview:
+    var currentUser by remember { mutableStateOf<Usuario?>(dummy) }
+
     RootsTheme {
-       SettingsScreen(navController = rememberNavController())
+        SettingsScreen(navController = rememberNavController())
     }
 }

@@ -1,8 +1,6 @@
 package com.example.roots.screens
 
-import com.example.roots.model.Usuario
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -18,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,147 +32,122 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.roots.R
 import com.example.roots.components.BottomNavBar
-import com.example.roots.repository.UsuarioRepository
+import com.example.roots.model.Usuario
 import com.example.roots.service.LoginService
 import com.example.roots.service.UsuarioService
+import com.example.roots.repository.UsuarioRepository
+import com.example.roots.util.uploadProfileImageToFirebase
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.roots.ui.theme.RootsTheme
-import saveImageToInternalStorage
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
 /**
- * Helper para guardar un Bitmap en internal storage y devolver su ruta absoluta.
+ * Pantalla para editar el perfil: se carga la info de Firebase, muestra campos (nombres, apellidos, correo, celular, cédula)
+ * y permite cambiar la foto (cámara o galería). Al actualizar, sube la foto a Firebase Storage (si cambió) y luego actualiza Firestore.
  */
-
-
-
-private fun saveBitmapToInternalStorage(context: android.content.Context, bmp: Bitmap): String {
-    val filename = "user_${System.currentTimeMillis()}.png"
-    val file = context.filesDir.resolve(filename)
-    FileOutputStream(file).use { out ->
-        bmp.compress(Bitmap.CompressFormat.PNG, 90, out)
-    }
-    return file.absolutePath
-}
-
-private fun saveImageToInternalStorage(context: Context, uri: Uri): String {
-    // generamos un nombre único
-    val filename = "profile_${System.currentTimeMillis()}.jpg"
-    // resolvemos el fichero destino
-    val file = File(context.filesDir, filename)
-    // abrimos el input de la URI y el output hacia el fichero
-    context.contentResolver.openInputStream(uri)?.use { input ->
-        FileOutputStream(file).use { output ->
-            input.copyTo(output)
-        }
-    }
-    return file.absolutePath
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(navController: NavController) {
     val context = LocalContext.current
-    val usuarioRepository = UsuarioRepository()
-    val usuarioService = UsuarioService(usuarioRepository)
-
-    /*// estados inicializados con los datos actuales
-    var profileImagePath by remember { mutableStateOf(repoUser.fotoPath) }
-    var profileBitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    // 1) permiso
-    val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
-*/
-
-    var currentUser: Usuario? = null
-
+    val usuarioService = remember { UsuarioService(UsuarioRepository()) }
     val firebaseUser = LoginService.getCurrentUser()
-    if (firebaseUser != null) {
-        usuarioService.obtener(firebaseUser.uid) { usuario ->
-            if (usuario != null) {
-                currentUser = usuario
-                println("Usuario actual: ${currentUser?.nombres}")
-                // Aquí ya puedes usar currentUser
-            } else {
-                println("Usuario no encontrado")
+    val coroutineScope = rememberCoroutineScope()
+
+    // 1) Estado para el Usuario traído desde Firestore
+    var currentUser by remember { mutableStateOf<Usuario?>(null) }
+
+    // 2) Estados locales para cada campo de texto (los llenaremos cuando llegue currentUser)
+    var nombres   by remember { mutableStateOf("") }
+    var apellidos by remember { mutableStateOf("") }
+    var correo    by remember { mutableStateOf("") }
+    var celular   by remember { mutableStateOf("") }
+    var cedula    by remember { mutableStateOf("") }
+
+    // 3) Estados para la foto:
+    //    - profileImageUri: URI local (cámara o galería) si el usuario elige una nueva foto
+    //    - profileImageUrl: URL en Firebase Storage (si existe en Firestore)
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+    var profileImageUrl by remember { mutableStateOf("") }
+
+    // 4) Bandera para saber si el usuario cambió la foto (entonces debemos subirla)
+    var photoChanged by remember { mutableStateOf(false) }
+
+    // ─── CARGAR DATOS DEL USUARIO ───
+    LaunchedEffect(firebaseUser?.uid) {
+        firebaseUser?.uid?.let { uid ->
+            usuarioService.obtener(uid) { usuario ->
+                if (usuario != null) {
+                    currentUser = usuario
+                    // Llenamos los estados de texto con los valores que vienen de Firestore
+                    nombres   = usuario.nombres
+                    apellidos = usuario.apellidos
+                    correo    = usuario.correo
+                    celular   = usuario.celular
+                    cedula    = usuario.cedula
+                    profileImageUrl = usuario.fotoPath  // URL en Storage (puede estar vacía)
+                } else {
+                    Toast.makeText(context, "No se pudo cargar usuario", Toast.LENGTH_SHORT).show()
+                }
             }
         }
-    } else {
-        println("No hay usuario autenticado")
     }
 
-    var nombres   by remember { mutableStateOf(currentUser?.nombres ?: "") }
-    var apellidos by remember { mutableStateOf(currentUser?.apellidos ?: "") }
-    var correo    by remember { mutableStateOf(currentUser?.correo ?: "") }
-    var celular   by remember { mutableStateOf(currentUser?.celular ?: "") }
-    var cedula    by remember { mutableStateOf(currentUser?.cedula ?: "") }
+    // ─── LANZADORES PARA FOTO (CÁMARA Y GALERÍA) ───
 
-
-    // estado para la ruta de la foto en disco
-    var profileImagePath by remember { mutableStateOf(currentUser?.fotoPath ?: "") }
-
-
-    // 1) launcher para tomar foto (recibe un Bitmap)
+    // 5) Launcher para tomar foto: devuelve Bitmap
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicturePreview()
     ) { bmp: Bitmap? ->
         bmp?.let {
-            // guardo el bitmap en disco y actualizo el path
-            val path = saveBitmapToInternalStorage(context, it)
-            profileImagePath = path
+            // Convertimos el Bitmap en un archivo temporal en cache y obtenemos su URI
+            val filename = "profile_${System.currentTimeMillis()}.jpg"
+            val file = File(context.cacheDir, filename)
+            FileOutputStream(file).use { out ->
+                it.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            val uri = Uri.fromFile(file)
+            profileImageUri = uri
+            photoChanged = true
         }
     }
 
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
+    // 6) Launcher para elegir foto de la galería: devuelve URI
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            profileImageUri = it
+            photoChanged = true
+        }
+    }
+
+    // 7) Lanzador para pedir permiso de cámara
+    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) {
             cameraLauncher.launch(null)
         } else {
-            Toast.makeText(context, "Se necesita permiso de cámara", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // 2) launcher para escoger de galería
-    val galleryLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            // guardo el stream en un fichero local
-            val path = saveImageToInternalStorage(context, it)
-            if (path != null) {
-                profileImagePath = path
-            }
-        }
-    }
-
-    // 3) launcher para pedir permiso de cámara
-    val requestCameraPermissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted: Boolean ->
-        if (granted) {
-            cameraLauncher.launch(null)
-        } else {
-            Toast.makeText(context, "Necesito permiso de cámara para tomar foto", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-
-    Scaffold(bottomBar = { BottomNavBar(navController) }) { padding ->
+    Scaffold(bottomBar = { BottomNavBar(navController) }) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(padding)
+                .padding(paddingValues)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Logo y título
+            // Logo + Título
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Logo",
@@ -183,7 +157,7 @@ fun EditProfileScreen(navController: NavController) {
             Text("Perfil", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(24.dp))
 
-            // Avatar circular
+            // Avatar circular:
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -191,32 +165,51 @@ fun EditProfileScreen(navController: NavController) {
                     .background(Color.LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                if (profileImagePath.isNotBlank()) {
-                    AsyncImage(
-                        model = File(profileImagePath),
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                when {
+                    // ① Si hay una URI local nueva
+                    profileImageUri != null -> {
+                        AsyncImage(
+                            model = profileImageUri,
+                            contentDescription = "Nueva foto de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // ② Si no hay URI local, pero sí una URL en Storage
+                    profileImageUrl.isNotBlank() -> {
+                        AsyncImage(
+                            model = profileImageUrl,
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    // ③ Si no hay ninguna, mostramos un icono genérico
+                    else -> {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Sin foto",
+                            modifier = Modifier.size(48.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
             }
 
             Spacer(Modifier.height(8.dp))
 
-            // Botones
+            // Botones para cambiar la foto
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = {
-                        // 1) ¿Ya tengo permiso?
+                        // Verificar permiso de cámara antes de lanzar cámara
                         if (ContextCompat.checkSelfPermission(
                                 context, Manifest.permission.CAMERA
                             ) == PackageManager.PERMISSION_GRANTED
                         ) {
-                            // 2) Sí: abro la cámara
                             cameraLauncher.launch(null)
                         } else {
-                            // 3) No: pido permiso
-                            requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5))
@@ -225,6 +218,7 @@ fun EditProfileScreen(navController: NavController) {
                     Spacer(Modifier.width(4.dp))
                     Text("Cámara", color = Color.Black)
                 }
+
                 Button(
                     onClick = { galleryLauncher.launch("image/*") },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD5FDE5))
@@ -237,30 +231,103 @@ fun EditProfileScreen(navController: NavController) {
 
             Spacer(Modifier.height(24.dp))
 
-            // Campos de texto
-            ProfileTextField("Nombres", nombres) { nombres = it }
-            ProfileTextField("Apellidos", apellidos) { apellidos = it }
-            ProfileTextField("Correo", correo) { correo = it }
-            ProfileTextField("Celular", celular) { celular = it }
-            ProfileTextField("Cédula", cedula) { cedula = it }
+            // ─── Campos de texto prellenados ───
+            OutlinedTextField(
+                value = nombres,
+                onValueChange = { nombres = it },
+                label = { Text("Nombres") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            )
+            OutlinedTextField(
+                value = apellidos,
+                onValueChange = { apellidos = it },
+                label = { Text("Apellidos") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            )
+            OutlinedTextField(
+                value = correo,
+                onValueChange = { correo = it },
+                label = { Text("Correo") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            )
+            OutlinedTextField(
+                value = celular,
+                onValueChange = { celular = it },
+                label = { Text("Celular") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            )
+            OutlinedTextField(
+                value = cedula,
+                onValueChange = { cedula = it },
+                label = { Text("Cédula") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            )
 
             Spacer(Modifier.height(24.dp))
 
-            // Botón de guardar
+            // ─── Botón “Actualizar perfil” ───
             Button(
                 onClick = {
-                    val actualizado = Usuario(
-                        id        = currentUser?.id ?: ""
-                    ,
-                        nombres   = nombres,
-                        apellidos = apellidos,
-                        correo    = correo,
-                        fotoPath  = profileImagePath,
-                        celular   = celular,
-                        cedula    = cedula
-                    )
-                    usuarioService.actualizar(actualizado)
-                    navController.popBackStack()
+                    coroutineScope.launch {
+                        // 1) Si cambió la foto, subimos profileImageUri a Firebase Storage
+                        var finalPhotoUrl = profileImageUrl
+                        if (photoChanged && profileImageUri != null) {
+                            try {
+                                finalPhotoUrl = uploadProfileImageToFirebase(profileImageUri!!)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(
+                                    context,
+                                    "Error al subir foto: ${e.localizedMessage}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                return@launch
+                            }
+                        }
+
+                        // 2) Verificar que currentUser tenga un ID válido
+                        val usuarioExistente = currentUser
+                        if (usuarioExistente == null || usuarioExistente.id.isBlank()) {
+                            Toast.makeText(context, "Usuario no válido", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+
+                        // 3) Creación del objeto Usuario con los nuevos valores
+                        val updatedUser = Usuario(
+                            id = usuarioExistente.id,
+                            nombres = nombres,
+                            apellidos = apellidos,
+                            correo = correo,
+                            fotoPath = finalPhotoUrl, // ahora es URL Cloud Storage
+                            celular = celular,
+                            cedula = cedula
+                        )
+
+                        // 4) Llamar a UsuarioService.actualizar()
+                        usuarioService.actualizar(updatedUser) { success ->
+                            if (success) {
+                                Toast.makeText(context, "Perfil actualizado", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            } else {
+                                Toast.makeText(context, "Error al actualizar perfil", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -270,19 +337,6 @@ fun EditProfileScreen(navController: NavController) {
             }
         }
     }
-}
-
-@Composable
-fun ProfileTextField(label: String, value: String, onValueChange: (String) -> Unit) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        singleLine = true,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-    )
 }
 
 @Preview(showBackground = true)
