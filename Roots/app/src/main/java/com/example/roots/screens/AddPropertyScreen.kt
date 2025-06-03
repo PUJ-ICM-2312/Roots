@@ -50,7 +50,9 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import com.google.firebase.auth.FirebaseAuth
-
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import java.util.concurrent.CancellationException
 
 
 private fun Double.format(digits: Int): String = "%.\${digits}f".format(this)
@@ -79,6 +81,8 @@ fun AddPropertyScreen(navController: NavController) {
     val coroutineScope = rememberCoroutineScope()
     val geocoder = remember { Geocoder(context, Locale.getDefault()) }
     var imageUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var triggerUpload by remember { mutableStateOf(false) }
 
     val launcherMultiple = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
@@ -205,112 +209,68 @@ fun AddPropertyScreen(navController: NavController) {
                 }
             }
 
+            // ① Si ya estamos subiendo, muestro un spinner grande:
+            if (isUploading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                CircularProgressIndicator(modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // El botón que dispara “acumula” la señal de subir cuando no está ocupado:
             Button(
                 onClick = {
-                    // 1. Validar que haya imágenes
-                    coroutineScope.launch {
-                        val urls = mutableListOf<String>()
-                        val storage = FirebaseStorage.getInstance()
+                    if (!isUploading) {
+                        triggerUpload = true
+                    }
+                },
+                enabled = !isUploading,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB2DFDB))
+            ) {
+                Text(
+                    text = if (isUploading) "Guardando..." else "Guardar Inmueble",
+                    color = Color.Black
+                )
+            }
 
-                        for (uri in imageUris) {
-                            try {
+            LaunchedEffect(triggerUpload) {
+                if (!triggerUpload) return@LaunchedEffect
+
+                isUploading = true
+
+                try {
+                    // 1) Subir todas las imágenes NUEVAS en paralelo
+                    val finalUrls = mutableListOf<String>()
+                    if (imageUris.isNotEmpty()) {
+                        val storage = FirebaseStorage.getInstance()
+                        // Creamos un Deferred por cada URI para subirla simultáneamente
+                        val jobs = imageUris.map { uri ->
+                            async(Dispatchers.IO) {
                                 val fileName = UUID.randomUUID().toString()
                                 val ref = storage.reference.child("inmuebles/$fileName.jpg")
-
                                 ref.putFile(uri).await()
-                                val downloadUrl = ref.downloadUrl.await().toString()
-                                urls.add(downloadUrl)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Error subiendo imagen: ${e.message}", Toast.LENGTH_SHORT).show()
-                                return@launch
+                                ref.downloadUrl.await().toString()
                             }
                         }
-
-                        if (urls.isEmpty()) {
-                            Toast.makeText(context, "Selecciona al menos una imagen válida", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-
-                        val lat = propertyLatLng?.latitude
-                        val lng = propertyLatLng?.longitude
-                        if (lat == null || lng == null) {
-                            Toast.makeText(context, "Primero busca la ubicación", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-
-                        if (direccion.isBlank() || ciudad.isBlank() || barrio.isBlank() ||
-                            precio.isBlank() || descripcion.isBlank()
-                        ) {
-                            Toast.makeText(context, "Completa todos los campos obligatorios", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-
-                        val precioFloat = precio.toFloatOrNull() ?: 0f
-                        val estratoInt = estrato.toIntOrNull() ?: 0
-                        val banosInt = numBanos.toIntOrNull() ?: 0
-                        val parqueaderosInt = numParqueaderos.toIntOrNull() ?: 0
-                        val habitacionesInt = numHabitaciones.toIntOrNull() ?: 0
-                        val metrosFloat = metros.toFloatOrNull() ?: 0f
-                        val adminFloat = admin.toFloatOrNull() ?: 0f
-                        val antiguedadInt = antiguedad.toIntOrNull() ?: 0
-                        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-
-                        val nuevoInmueble = Inmueble(
-                            id = "",
-                            direccion = direccion,
-                            precio = precioFloat,
-                            estrato = estratoInt,
-                            numBanos = banosInt,
-                            numParqueaderos = parqueaderosInt,
-                            numHabitaciones = habitacionesInt,
-                            metrosCuadrados = metrosFloat,
-                            barrio = barrio,
-                            ciudad = ciudad,
-                            descripcion = descripcion,
-                            fotos = urls,
-                            tipoPublicacion = tipoPublicacion,
-                            tipoInmueble = tipoInmueble,
-                            numFavoritos = 0,
-                            mensualidadAdministracion = adminFloat,
-                            antiguedad = antiguedadInt,
-                            fechaPublicacion = System.currentTimeMillis(),
-                            latitud = lat,
-                            longitud = lng,
-                            usuarioId = userId
-                        )
-
-                        inmuebleService.crear(nuevoInmueble) { generatedId ->
-                            if (generatedId != null) {
-                                navController.navigate("${Screen.PropertyScrollMode.route}/$generatedId")
-                            } else {
-                                Toast.makeText(context, "Error al guardar el inmueble. Intenta nuevamente.", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                        finalUrls.addAll(jobs.awaitAll())
                     }
 
-                    // 2. Validar ubicación
+                    // 2) Validar ciudad/barrio/ubicación (igual que antes)
                     val lat = propertyLatLng?.latitude
                     val lng = propertyLatLng?.longitude
                     if (lat == null || lng == null) {
-                        Toast.makeText(
-                            context,
-                            "Primero busca la ubicación",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
+                        Toast.makeText(context, "Primero busca la ubicación", Toast.LENGTH_SHORT).show()
+                        return@LaunchedEffect
                     }
-                    // 3. Validar campos obligatorios básicos
                     if (direccion.isBlank() || ciudad.isBlank() || barrio.isBlank() ||
                         precio.isBlank() || descripcion.isBlank()
                     ) {
-                        Toast.makeText(
-                            context,
-                            "Completa todos los campos obligatorios",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
+                        Toast.makeText(context, "Completa todos los campos obligatorios", Toast.LENGTH_SHORT).show()
+                        return@LaunchedEffect
                     }
-                    // Convertir a números seguros
+
+                    // 3) Parsear valores numéricos
                     val precioFloat = precio.toFloatOrNull() ?: 0f
                     val estratoInt = estrato.toIntOrNull() ?: 0
                     val banosInt = numBanos.toIntOrNull() ?: 0
@@ -320,14 +280,50 @@ fun AddPropertyScreen(navController: NavController) {
                     val adminFloat = admin.toFloatOrNull() ?: 0f
                     val antiguedadInt = antiguedad.toIntOrNull() ?: 0
 
+                    // 4) Construir el Inmueble nuevo (id="" porque Firestore lo genera al add)
+                    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                    val nuevoInmueble = Inmueble(
+                        id = "",
+                        direccion = direccion,
+                        precio = precioFloat,
+                        estrato = estratoInt,
+                        numBanos = banosInt,
+                        numParqueaderos = parqueaderosInt,
+                        numHabitaciones = habitacionesInt,
+                        metrosCuadrados = metrosFloat,
+                        barrio = barrio,
+                        ciudad = ciudad,
+                        descripcion = descripcion,
+                        fotos = finalUrls,
+                        tipoPublicacion = tipoPublicacion,
+                        tipoInmueble = tipoInmueble,
+                        numFavoritos = 0,
+                        mensualidadAdministracion = adminFloat,
+                        antiguedad = antiguedadInt,
+                        fechaPublicacion = System.currentTimeMillis(),
+                        latitud = lat,
+                        longitud = lng,
+                        usuarioId = userId
+                    )
 
-                },
-                shape = RoundedCornerShape(50),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB2DFDB)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Guardar Inmueble", color = Color.Black)
+                    // 5) Llamar a Firestore para crear el documento
+                    inmuebleService.crear(nuevoInmueble) { generatedId ->
+                        if (generatedId != null) {
+                            navController.navigate("${Screen.PropertyScrollMode.route}/$generatedId")
+                        } else {
+                            Toast.makeText(context, "Error al guardar. Intenta de nuevo.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                } catch (e: CancellationException) {
+                    // Si el usuario sale de la pantalla antes de terminar, simplemente no hacemos nada
+                } finally {
+                    isUploading = false
+                    triggerUpload = false
+                }
             }
+
+
 
             Spacer(modifier = Modifier.height(32.dp))
         }

@@ -126,6 +126,14 @@ fun NavigationStack() {
                         chatId = chatId
                     )
                 }
+                composable(
+                    route = "edit_property/{propertyId}",
+                    arguments = listOf(navArgument("propertyId") { type = NavType.StringType })
+                ) { backStack ->
+                    val propertyId = backStack.arguments?.getString("propertyId") ?: return@composable
+                    EditPropertyScreen(navController, propertyId)
+                }
+
             }
         }
     }
