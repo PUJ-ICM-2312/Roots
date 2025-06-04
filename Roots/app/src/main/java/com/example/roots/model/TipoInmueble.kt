@@ -6,7 +6,16 @@ enum class TipoInmueble(val label: String) {
     Penthouse("Penthouse"),
     LocalComercial("Local Comercial"),
     Lote("Lote"),
-    Apartaestudio("Apartaestudio")
+    Apartaestudio("Apartaestudio");
+
+    companion object {
+        fun fromString(value: String): TipoInmueble? {
+            // Normaliza el string para que coincida con los nombres de los enums
+            // Ejemplo: "Casa Campestre" -> "CasaCampestre"
+            val formattedValue = value.replace(" ", "")
+            return entries.find { it.name.equals(formattedValue, ignoreCase = true) }
+        }
+    }
 }
 
 
