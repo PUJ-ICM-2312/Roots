@@ -20,8 +20,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.roots.model.Plan
+import com.example.roots.model.Usuario
+import com.example.roots.repository.UsuarioRepository
+import com.example.roots.service.LoginService
+import com.example.roots.service.UsuarioService
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.*
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,9 +40,9 @@ fun PaymentScreen(
 
     // 1) Lista “simulada” de planes (puedes reemplazarla por tu consulta real)
     val planes = listOf(
-        Plan(id = "plan1", nombre = "Plan Publicador",  descripcion = "", precioMensual = 9900.0),
-        Plan(id = "plan2", nombre = "Plan Pro",         descripcion = "", precioMensual = 19900.0),
-        Plan(id = "plan3", nombre = "Plan Premium",     descripcion = "", precioMensual = 29900.0)
+        Plan(id = "plan1", nombre = "Plan Publicador", descripcion = "", precioMensual = 9900.0),
+        Plan(id = "plan2", nombre = "Plan Pro",        descripcion = "", precioMensual = 19900.0),
+        Plan(id = "plan3", nombre = "Plan Premium",    descripcion = "", precioMensual = 29900.0)
     )
 
     // 2) Buscamos el plan seleccionado por su ID
@@ -50,7 +56,7 @@ fun PaymentScreen(
         return
     }
 
-    // 3) Función auxiliar para formatear números con separador de miles (ej: 109.900)
+    // 3) Función auxiliar para formatear números con separador de miles (ej: 10.900)
     fun formatPrecio(valor: Double): String {
         val nf = NumberFormat.getInstance(Locale("es", "CO"))
         nf.maximumFractionDigits = 0
@@ -61,6 +67,7 @@ fun PaymentScreen(
     var selectedPayment by remember { mutableStateOf<String?>(null) }
     var acceptTerms by remember { mutableStateOf(false) }
     var receivePromos by remember { mutableStateOf(false) }
+    var isPaying by remember { mutableStateOf(false) }
 
     // 5) Calculamos el total a pagar
     val totalAPagar = planSeleccionado.precioMensual * meses
@@ -69,6 +76,10 @@ fun PaymentScreen(
     val verdeClaro = Color(0xFFD5FDE5)
     val fondoGrisClaro = Color(0xFFF2F2F2)
 
+    // 7) Servicio de usuario para actualizar Firestore
+    val usuarioService = remember { UsuarioService(UsuarioRepository()) }
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,6 +87,7 @@ fun PaymentScreen(
             .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
         Spacer(modifier = Modifier.height(25.dp))
+
         // —— Título principal ——
         Text(
             text = "Confirmar Suscripción",
@@ -85,10 +97,9 @@ fun PaymentScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // —— 6.2 Tarjeta verde con “Plan X meses: $YYY” ——
+        // —— Tarjeta verde con “Plan X meses: $YYY” ——
         Card(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = verdeClaro),
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -103,7 +114,7 @@ fun PaymentScreen(
         }
         Spacer(modifier = Modifier.height(32.dp))
 
-        // —— 6.3 Subtítulo “Elige método de pago” ——
+        // —— Subtítulo “Elige método de pago” ——
         Text(
             text = "Elige método de pago",
             fontSize = 16.sp,
@@ -111,14 +122,15 @@ fun PaymentScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        // —— 6.4 Opción Mastercard ——
+        // —— Opción Mastercard ——
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
                 .clickable { selectedPayment = "mastercard" },
             colors = CardDefaults.cardColors(
-                containerColor = if (selectedPayment == "mastercard") verdeClaro.copy(alpha = 0.6f) else fondoGrisClaro
+                containerColor = if (selectedPayment == "mastercard")
+                    verdeClaro.copy(alpha = 0.6f) else fondoGrisClaro
             ),
             shape = RoundedCornerShape(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -129,11 +141,9 @@ fun PaymentScreen(
                     .fillMaxWidth()
                     .padding(12.dp)
             ) {
-                // Aquí podrías reemplazar con el ícono real de Mastercard
                 Icon(
-                    imageVector = Icons.Default.CreditCard, // Ícono genérico
+                    imageVector = Icons.Default.CreditCard,
                     contentDescription = "Mastercard",
-                    tint = Color.Unspecified,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -144,14 +154,15 @@ fun PaymentScreen(
             }
         }
 
-        // —— 6.5 Opción VISA ——
+        // —— Opción VISA ——
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
                 .clickable { selectedPayment = "visa" },
             colors = CardDefaults.cardColors(
-                containerColor = if (selectedPayment == "visa") verdeClaro.copy(alpha = 0.6f) else fondoGrisClaro
+                containerColor = if (selectedPayment == "visa")
+                    verdeClaro.copy(alpha = 0.6f) else fondoGrisClaro
             ),
             shape = RoundedCornerShape(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
@@ -162,11 +173,9 @@ fun PaymentScreen(
                     .fillMaxWidth()
                     .padding(12.dp)
             ) {
-                // Aquí podrías reemplazar con el ícono real de VISA
                 Icon(
                     imageVector = Icons.Default.CreditCard,
                     contentDescription = "VISA",
-                    tint = Color.Unspecified,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
@@ -179,12 +188,12 @@ fun PaymentScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // —— 6.6 Casilla “Aceptar términos y condiciones” ——
+        // —— Casilla “Aceptar términos y condiciones” ——
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { acceptTerms = !acceptTerms }  // cambiar al tocar toda la fila
+                .clickable { acceptTerms = !acceptTerms }
         ) {
             Checkbox(
                 checked = acceptTerms,
@@ -194,7 +203,7 @@ fun PaymentScreen(
             Text(text = "Aceptar términos y condiciones*", fontSize = 14.sp)
         }
 
-        // —— 6.7 Casilla “Recibir promociones por correo” ——
+        // —— Casilla “Recibir promociones por correo” ——
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -211,13 +220,71 @@ fun PaymentScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // —— 6.8 Botón “Pagar” ——
-        val botonHabilitado = acceptTerms && (selectedPayment != null)
+        // —— Botón “Pagar” ——
+        val botonHabilitado = acceptTerms && (selectedPayment != null) && !isPaying
 
         Button(
             onClick = {
-                // Si todo está bien, navegamos a payment_success
-                navController.navigate("payment_success")
+                //  Si no estamos ya en proceso de pago, iniciamos la rutina
+                if (!isPaying && botonHabilitado) {
+                    isPaying = true
+                    scope.launch {
+                        // 1) Validar usuario autenticado
+                        val firebaseUser = LoginService.getCurrentUser()
+                        if (firebaseUser == null) {
+                            Toast.makeText(context, "No está autenticado", Toast.LENGTH_SHORT).show()
+                            isPaying = false
+                            return@launch
+                        }
+
+                        // 2) Obtener datos actuales del usuario desde Firestore
+                        usuarioService.obtener(firebaseUser.uid) { usuario ->
+                            if (usuario != null) {
+                                // 3) Calcular nueva fecha de expiración (hoy + meses * 30 días en ms)
+                                val msPorMes = 30L * 24L * 60L * 60L * 1000L
+                                val ahora = System.currentTimeMillis()
+                                val fechaExp = ahora + meses * msPorMes
+
+                                // 4) Construir el Usuario actualizado (manteniendo campos existentes)
+                                val updatedUser = Usuario(
+                                    id = usuario.id,
+                                    nombres = usuario.nombres,
+                                    apellidos = usuario.apellidos,
+                                    correo = usuario.correo,
+                                    fotoPath = usuario.fotoPath,
+                                    celular = usuario.celular,
+                                    cedula = usuario.cedula,
+                                    tienePlan = true,
+                                    planId = planSeleccionado.id,
+                                    fechaExpiracion = fechaExp
+                                )
+
+                                // 5) Guardar el cambio en Firestore
+                                usuarioService.actualizar(updatedUser) { success ->
+                                    isPaying = false
+                                    if (success) {
+                                        Toast.makeText(
+                                            context,
+                                            "Pago exitoso. ¡Ya puedes publicar!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        // 6) Navegar a pantalla de éxito
+                                        navController.navigate("payment_success")
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Error al procesar pago. Intenta nuevamente.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(context, "Usuario no encontrado", Toast.LENGTH_SHORT).show()
+                                isPaying = false
+                            }
+                        }
+                    }
+                }
             },
             enabled = botonHabilitado,
             shape = RoundedCornerShape(50),
@@ -228,17 +295,27 @@ fun PaymentScreen(
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text(
-                text = "Pagar",
-                fontSize = 16.sp,
-                color = if (botonHabilitado) Color.Black else Color.Gray
-            )
+            if (isPaying) {
+                // Muestra un spinner pequeño mientras se procesa
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Procesando…", fontSize = 16.sp, color = Color.Gray)
+            } else {
+                Text(
+                    text = "Pagar",
+                    fontSize = 16.sp,
+                    color = if (botonHabilitado) Color.Black else Color.Gray
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // —— Botón “Cancelar” para volver atrás ——
-
         Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier
@@ -246,8 +323,8 @@ fun PaymentScreen(
                 .height(48.dp),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFBDBDBD), // Gris claro de fondo
-                contentColor = Color(0xFF000000)    // Gris oscuro para el texto
+                containerColor = Color(0xFFBDBDBD), // Gris claro
+                contentColor = Color(0xFF000000)    // Texto negro
             )
         ) {
             Text(
@@ -258,6 +335,5 @@ fun PaymentScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
     }
 }
