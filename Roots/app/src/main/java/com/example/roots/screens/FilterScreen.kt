@@ -33,7 +33,7 @@ data class FilterState(
     val selectedBanios: List<String> = emptyList(),
     val selectedEstratos: List<String> = emptyList(),
     val selectedAntiguedad: String = "Todos",
-    val selectedFecha: String = "Hoy",
+    val selectedFecha: String = "Todos",
     val parqueadero: Boolean = false,
     val precioMin: String = "",
     val precioMax: String = "",
@@ -87,7 +87,7 @@ fun FilterScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    sharedFilterViewModel.updateFilters(localState)
+                    navController.popBackStack("swipe", inclusive = false)
                     navController.navigate(Screen.Swipe.route) { // Asegúrate que Screen.Swipe.route es correcto
                         // Opcional: configura popUpTo para limpiar el backstack si es necesario
                         popUpTo(navController.graph.startDestinationId) {
