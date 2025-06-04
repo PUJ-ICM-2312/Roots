@@ -237,8 +237,7 @@ fun PaymentScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // —— 6.9 Botón “Cancelar” para volver atrás ——
-        Spacer(modifier = Modifier.height(24.dp))
+        // —— Botón “Cancelar” para volver atrás ——
 
         Button(
             onClick = { navController.popBackStack() },
