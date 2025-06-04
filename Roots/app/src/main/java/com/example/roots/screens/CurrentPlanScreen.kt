@@ -255,7 +255,7 @@ fun CurrentPlanScreen(navController: NavController) {
                     )
                 ) {
                     Text(
-                        text = "Regresra",
+                        text = "Regresar",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
