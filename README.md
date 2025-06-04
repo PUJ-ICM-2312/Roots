@@ -1,5 +1,5 @@
 # Roots
-![](/Imageneswiki/image-removebg-preview.png)
+![](/Imageneswiki/Logo.png)
 ROOTS - La 501 - Equipo 2
 
 ## Equipo
