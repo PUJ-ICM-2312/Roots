@@ -2,11 +2,9 @@ package com.example.roots.model
 
 data class Suscripcion(
     val id: String = "",
-    val fechaInicio: String = "",  // Guardar como ISO date en Firestore (usar LocalDate si luego lo transformas)
-    val fechaFin: String = "",
-    val activo: Boolean = false,
-    val renovable: Boolean = false,
-    val metodoPago: MetodoPago = MetodoPago.TARJETA,
-    val ultimaFacturaId: String = "",
-    val plan: Plan? = null  // relación explícita si se carga el plan completo
+    val usuarioId: String = "",
+    val planId: String = "",
+    val fechaInicio: Long = 0L,
+    val mesesContratados: Int = 0,
+    val fechaExpiracion: Long = 0L // ej. fechaInicio + mesesContratados * 30 dias
 )

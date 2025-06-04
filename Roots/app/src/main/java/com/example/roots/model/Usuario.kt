@@ -8,13 +8,14 @@ data class Usuario(
     val fotoPath: String = "",
     val celular: String = "",
     val cedula: String = "",
+    val tienePlan: Boolean = false,
+    val planId: String = "",
+    val fechaExpiracion: Long = 0L,
     val publicados: MutableList<Inmueble> = mutableListOf(),
     val favoritos: MutableList<Inmueble> = mutableListOf(),
     val tarjetas: MutableList<Tarjeta> = mutableListOf(),
     val suscripciones: MutableList<Suscripcion> = mutableListOf(),
     val chatIds: MutableList<String> = mutableListOf()
 ) {
-    fun puedePublicar(): Boolean {
-        return suscripciones.any { it.activo }
-    }
+
 }

@@ -86,13 +86,39 @@ fun NavigationStack() {
                 composable(Screen.SignUp.route) { SignUpScreen(navController) }
                 composable(Screen.Swipe.route) { SwipeROOTS(navController) }
                 composable(Screen.AddProperty.route) { AddPropertyScreen(navController) }
-                composable(Screen.ConfirmSubscription.route) { ConfirmSubscriptionScreen(navController) }
+                composable(
+                    route = "${Screen.ConfirmSubscription.route}/{planId}",
+                    arguments = listOf(
+                        navArgument("planId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val planId = backStackEntry.arguments?.getString("planId") ?: ""
+                    ConfirmSubscriptionScreen(navController, planId)
+                }
                 composable(Screen.Messages.route) { MessagesScreen(navController) }
                 composable(Screen.MyProperties.route) { MyPropertiesScreen(navController) }
-                composable(Screen.Payment.route) { PaymentScreen(navController) }
+                composable(
+                    route = "${Screen.Payment.route}/{planId}/{meses}",
+                    arguments = listOf(
+                        navArgument("planId") { type = NavType.StringType },
+                        navArgument("meses") { type = NavType.IntType }
+                    )
+                ) { backStackEntry ->
+                    val planId = backStackEntry.arguments?.getString("planId") ?: ""
+                    val meses = backStackEntry.arguments?.getInt("meses") ?: 1
+                    PaymentScreen(navController, planId, meses)
+                }
                 composable(Screen.PaymentSuccess.route) { PaymentSuccessScreen(navController) }
                 composable(Screen.Plans.route) { PlansScreen(navController) }
-                //composable(Screen.PropertyScrollMode.route) { PropertyScrollModeScreen(navController) }
+                composable(
+                    route = "${Screen.PropertyScrollMode.route}/{propertyId}",
+                    arguments = listOf(
+                        navArgument("propertyId") { type = NavType.StringType }
+                    )
+                ) { backStackEntry ->
+                    val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
+                    PropertyScrollModeScreen(navController = navController, propertyId = propertyId)
+                }
                 composable(Screen.Settings.route) { SettingsScreen(navController) }
                 composable(Screen.Filter.route) { FilterScreen(navController) }
                 composable(Screen.EditProfile.route) { EditProfileScreen(navController) }
